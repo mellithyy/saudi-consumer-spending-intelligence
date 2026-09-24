@@ -4,3 +4,5 @@ __pycache__/
 
 # Raw downloads (extract.py can download them again at any time)
 data/raw/
+# Clean data (clean.py rebuilds it from the raw file in seconds)
+data/clean/
