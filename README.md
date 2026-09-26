@@ -2,7 +2,7 @@
 
 Weekly card spending in Saudi Arabia, by city and by sector, from May 2020 to July 2025.
 
-**Status: in progress.** Stages 1 and 2 of 7 (extraction, cleaning and data-quality checks) are done.
+**Status: in progress.** Stages 1 to 3 of 7 (extraction, cleaning and data-quality checks, SQL warehouse) are done.
 
 ## Data
 - Source: Saudi Central Bank (SAMA), weekly point-of-sale (POS) transactions, published on the
@@ -27,10 +27,24 @@ Weekly card spending in Saudi Arabia, by city and by sector, from May 2020 to Ju
 Output: `data/clean/pos_weekly.csv`, one row per week per series (29 series x 270 weeks = 7,830 rows).
 The script checks the table before saving and stops with a list of problems if any rule fails.
 
+## SQL warehouse
+A star schema in DuckDB, stored in one file (`data/warehouse.duckdb`). The tables are defined in
+[`sql/schema.sql`](sql/schema.sql) and filled by [`pipeline/load.py`](pipeline/load.py).
+
+| Table | Rows | One row is | Columns |
+|---|---|---|---|
+| `fact_weekly_spending` | 7,830 | one week of one series | `date_key`, `series_key`, `transactions_k`, `value_k_sar` |
+| `dim_date` | 270 | one week | `date_key`, `week_start`, `source_date`, year, quarter, month |
+| `dim_series` | 29 | one series | `series_key`, `series`, `level` |
+
+- Primary and foreign keys refuse duplicates and broken links.
+- The fact table keeps only numbers that can be added up; percentages are calculated in queries.
+- `load.py` builds a new file, checks row counts and totals against the clean file, and only then replaces the old warehouse.
+
 ## Plan
 1. Extract: download the data from the API, with checks ✅
 2. Clean the data and run data-quality checks ✅
-3. Load it into a SQL warehouse (star schema)
+3. Load it into a SQL warehouse (star schema) ✅
 4. Analyse seasonality (Ramadan, Eid, Riyadh Season), city trends and sector growth
 5. Build a Power BI dashboard and an Excel management report
 6. Forecast the next quarter
@@ -42,8 +56,10 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 .venv\Scripts\python pipeline/extract.py
 .venv\Scripts\python pipeline/clean.py
+.venv\Scripts\python pipeline/load.py
 ```
-The raw file is saved to `data/raw/pos_transactions.csv` and the clean table to `data/clean/pos_weekly.csv`.
+The raw file is saved to `data/raw/pos_transactions.csv`, the clean table to `data/clean/pos_weekly.csv`
+and the warehouse to `data/warehouse.duckdb`.
 `.venv\Scripts\python explore/profile_raw.py` prints the data profile and re-checks every finding on the raw file.
 
 ## Author
