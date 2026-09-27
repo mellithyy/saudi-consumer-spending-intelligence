@@ -1,0 +1,30 @@
+level,series,avg_week_2021_m_sar,avg_week_2024_m_sar,growth_pct,rank_in_level
+city,Makkah,305.2,532.2,74.4,1
+city,Riyadh,2817.0,4304.3,52.8,2
+city,Madina,337.0,505.6,50.1,3
+city,Tabouk,164.5,243.0,47.8,4
+city,Other cities,2690.1,3737.6,38.9,5
+city,Hail,152.0,204.3,34.4,6
+city,Buraidah,228.9,299.3,30.8,7
+city,Dammam,485.2,628.7,29.6,8
+city,Jeddah,1459.6,1792.6,22.8,9
+city,Abha,138.1,166.9,20.9,10
+city,Khobar,307.5,362.7,18.0,11
+national,National,9085.0,12777.4,40.6,1
+sector,Miscellaneous Goods and Services,835.5,1555.9,86.2,1
+sector,Hotels,175.8,299.4,70.3,2
+sector,Other,1249.0,2086.6,67.1,3
+sector,Gas Stations,525.5,866.5,64.9,4
+sector,Education,124.8,191.9,53.8,5
+sector,Restaurants & Café,1201.3,1846.0,53.7,6
+sector,Transportation,493.7,726.8,47.2,7
+sector,Beverage and Food,1397.4,1953.9,39.8,8
+sector,Clothing and Footwear,731.0,876.7,19.9,9
+sector,Telecommunication,96.1,112.1,16.6,10
+sector,Health,679.7,789.3,16.1,11
+sector,Jewelry,247.5,261.7,5.7,12
+sector,Recreation and Culture,270.5,280.4,3.6,13
+sector,Public Utilities,78.2,72.6,-7.2,14
+sector,Construction & Building Materials,365.4,338.8,-7.3,15
+sector,Furniture,331.3,303.4,-8.4,16
+sector,Electronic & Electric Devices,282.2,215.5,-23.6,17

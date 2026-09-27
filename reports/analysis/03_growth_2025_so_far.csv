@@ -1,0 +1,30 @@
+level,series,weeks_2024,weeks_2025,value_2024_bn_sar,value_2025_bn_sar,growth_pct,rank_in_level
+city,Riyadh,27,27,112.45,124.73,10.9,1
+city,Buraidah,27,27,7.96,8.73,9.7,2
+city,Khobar,27,27,9.55,10.36,8.4,3
+city,Dammam,27,27,16.55,17.93,8.4,4
+city,Madina,27,27,13.54,14.52,7.2,5
+city,Makkah,27,27,14.67,15.67,6.8,6
+city,Jeddah,27,27,48.42,51.7,6.8,7
+city,Hail,27,27,5.45,5.75,5.5,8
+city,Tabouk,27,27,6.44,6.75,4.8,9
+city,Abha,27,27,4.38,4.42,1.0,10
+city,Other cities,27,27,100.89,101.4,0.5,11
+national,National,27,27,340.3,361.97,6.4,1
+sector,Jewelry,27,27,7.15,9.19,28.5,1
+sector,Other,27,27,54.85,67.15,22.4,2
+sector,Gas Stations,27,27,22.48,24.88,10.7,3
+sector,Clothing and Footwear,27,27,24.69,26.66,8.0,4
+sector,Telecommunication,27,27,2.89,3.08,6.7,5
+sector,Miscellaneous Goods and Services,27,27,41.83,44.31,5.9,6
+sector,Health,27,27,20.86,21.69,4.0,7
+sector,Education,27,27,3.76,3.89,3.5,8
+sector,Transportation,27,27,18.91,19.52,3.2,9
+sector,Restaurants & Café,27,27,48.79,49.97,2.4,10
+sector,Beverage and Food,27,27,53.19,53.69,0.9,11
+sector,Hotels,27,27,8.0,8.05,0.6,12
+sector,Construction & Building Materials,27,27,8.82,8.81,-0.1,13
+sector,Furniture,27,27,8.13,8.0,-1.7,14
+sector,Recreation and Culture,27,27,7.56,7.32,-3.2,15
+sector,Electronic & Electric Devices,27,27,6.1,4.36,-28.5,16
+sector,Public Utilities,27,27,2.3,1.4,-39.2,17
