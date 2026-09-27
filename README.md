@@ -34,12 +34,19 @@ A star schema in DuckDB, stored in one file (`data/warehouse.duckdb`). The table
 | Table | Rows | One row is | Columns |
 |---|---|---|---|
 | `fact_weekly_spending` | 7,830 | one week of one series | `date_key`, `series_key`, `transactions_k`, `value_k_sar` |
-| `dim_date` | 270 | one week | `date_key`, `week_start`, `source_date`, year, quarter, month |
+| `dim_date` | 270 | one week | `date_key`, `week_start`, `source_date`, year, quarter, month, `ramadan_days`, `eid` |
 | `dim_series` | 29 | one series | `series_key`, `series`, `level` |
 
 - Primary and foreign keys refuse duplicates and broken links.
 - The fact table keeps only numbers that can be added up; percentages are calculated in queries.
 - `load.py` builds a new file, checks row counts and totals against the clean file, and only then replaces the old warehouse.
+- Ramadan moves about 11 days earlier every year, so each week records how many of its 7 days fall in
+  Ramadan (0 to 7) and which Eid, if any, falls in it. The dates are in
+  [`data/reference/islamic_calendar.csv`](data/reference/islamic_calendar.csv), typed from the official
+  [Umm al-Qura calendar](https://www.ummulqura.org.sa/en) (for 2020 to 2025 it matches the dates the
+  Supreme Court announced after sighting the moon). `load.py` stops if a date breaks the calendar's rules
+  (Ramadan is 29 or 30 days; Eid al-Adha comes 67 to 69 days after Eid al-Fitr) or if the data runs past
+  the last year in the file.
 
 ## Plan
 1. Extract: download the data from the API, with checks ✅

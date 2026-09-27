@@ -8,7 +8,9 @@ CREATE TABLE dim_date (
     source_date  DATE    NOT NULL,      -- the date as SAMA published it (differs once: 2020-06-20)
     year         INTEGER NOT NULL,
     quarter      INTEGER NOT NULL,
-    month        INTEGER NOT NULL
+    month        INTEGER NOT NULL,
+    ramadan_days INTEGER NOT NULL,      -- how many of the week's 7 days are in Ramadan (0 to 7)
+    eid          VARCHAR                -- 'Eid al-Fitr', 'Eid al-Adha', or empty (NULL) for other weeks
 );
 
 CREATE TABLE dim_series (
