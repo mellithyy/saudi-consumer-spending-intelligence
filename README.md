@@ -3,7 +3,7 @@
 Weekly card spending in Saudi Arabia, by city and by sector, from May 2020 to July 2025.
 
 **Status: in progress.** Stages 1 to 4 of 7 (extraction, cleaning and data-quality checks, SQL warehouse, SQL analysis)
-are done, and the Power BI dashboard of stage 5 is built. Next: the Excel management report, then a forecast.
+are done, and stage 5 is built: a Power BI dashboard and an Excel management report. Next: a forecast.
 
 ![The dashboard's Overview page](reports/figures/dashboard_1_overview.png)
 
@@ -147,12 +147,27 @@ files, so every change shows up in Git. 42 DAX measures. Choices worth knowing:
 the 2025 national total (361.97 billion SAR, +6.4%) and the Ramadan figures above. Paste them into DAX query
 view to re-check the numbers after a refresh.
 
+## Excel management report
+[`pipeline/excel_report.py`](pipeline/excel_report.py) builds
+[`reports/excel/saudi_spending_report.xlsx`](reports/excel/saudi_spending_report.xlsx) from the same Parquet files
+as the dashboard: one printable page (landscape A4) for a manager who works in Excel.
+
+![The Excel report, 2025](reports/figures/excel_report.png)
+
+- One input cell: pick a year from 2022 to 2025, and every number, both tables and the chart follow it.
+- Every figure is a formula (SUMIFS, MAXIFS, AVERAGEIFS, INDEX/MATCH, LARGE) on a Calc sheet, over a Data sheet
+  of 7,830 rows, so each number can be traced back to the data. Cities are ranked by growth and sectors by size
+  with LARGE and INDEX/MATCH.
+- The chart colours each week by type (one column series per type), and its ranges are named ranges that stop
+  at the year's last week, so 2025 shows 27 weeks and 2023 shows 53.
+- The figures match the dashboard's, for example 2025: 361.97 billion SAR, +6.4% on the same weeks of 2024.
+
 ## Plan
 1. Extract: download the data from the API, with checks ✅
 2. Clean the data and run data-quality checks ✅
 3. Load it into a SQL warehouse (star schema) ✅
 4. Analyse seasonality (Ramadan, Eid), city trends and sector growth with SQL ✅
-5. Build a Power BI dashboard ✅ and an Excel management report
+5. Build a Power BI dashboard and an Excel management report ✅
 6. Forecast the next quarter
 7. Automate the refresh and publish
 
@@ -165,10 +180,11 @@ python -m venv .venv
 .venv\Scripts\python pipeline/load.py
 .venv\Scripts\python pipeline/analyse.py
 .venv\Scripts\python pipeline/export.py
+.venv\Scripts\python pipeline/excel_report.py
 ```
 The raw file is saved to `data/raw/pos_transactions.csv`, the clean table to `data/clean/pos_weekly.csv`,
-the warehouse to `data/warehouse.duckdb`, the analysis results to `reports/analysis/` and the files for
-Power BI to `data/powerbi/`.
+the warehouse to `data/warehouse.duckdb`, the analysis results to `reports/analysis/`, the files for
+Power BI to `data/powerbi/` and the Excel report to `reports/excel/`.
 
 To open the dashboard: open `powerbi/saudi_spending.pbip` in Power BI Desktop, set the `DataFolder` parameter
 (Home > Transform data > Edit parameters) to the full path of your `data\powerbi\` folder, then select Refresh.
