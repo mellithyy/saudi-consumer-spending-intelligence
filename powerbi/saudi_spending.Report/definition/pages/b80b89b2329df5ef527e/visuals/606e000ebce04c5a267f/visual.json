@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "606e000ebce04c5a267f",
   "position": {
     "x": 896,
@@ -68,7 +68,8 @@
             },
             "direction": "Descending"
           }
-        ]
+        ],
+        "isDefaultSort": false
       }
     },
     "objects": {
@@ -272,7 +273,7 @@
                           "Entity": "Measures_"
                         }
                       },
-                      "Property": "Colour city"
+                      "Property": "Colour city payment"
                     }
                   }
                 }
@@ -423,7 +424,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "'Average card payment in each city in riyals; the subtitle gives the national average'"
+                  "Value": "'Average card payment in each city in riyals; dark when above the national average'"
                 }
               }
             }

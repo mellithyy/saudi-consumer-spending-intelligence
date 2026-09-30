@@ -76,31 +76,6 @@
               "objects": {}
             }
           },
-          "0d2a101fedc536f4f0c0": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "becb3a3fb57308da07a2",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Note growth"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
-            "singleVisual": {
-              "visualType": "cardVisual",
-              "objects": {}
-            }
-          },
           "0d9a20a50e6e951f1032": {
             "filters": {
               "byExpr": [
@@ -319,31 +294,6 @@
               "objects": {}
             }
           },
-          "241c11c2f986c115a920": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "a44358b3ea0941ae0e94",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Average payment SAR"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
-            "singleVisual": {
-              "visualType": "cardVisual",
-              "objects": {}
-            }
-          },
           "28d5d2724af6129d1fa3": {
             "singleVisual": {
               "visualType": "actionButton",
@@ -353,56 +303,6 @@
           "2f1f77444c69b928cfec": {
             "singleVisual": {
               "visualType": "actionButton",
-              "objects": {}
-            }
-          },
-          "3240bd9d1f7dfaee7b78": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "3f656278b09ab00dc053",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Spending growth %"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
-            "singleVisual": {
-              "visualType": "cardVisual",
-              "objects": {}
-            }
-          },
-          "4459109ada3deec542ed": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "ee25b858e1ec12537c79",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Spent bn SAR"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
-            "singleVisual": {
-              "visualType": "cardVisual",
               "objects": {}
             }
           },
@@ -593,56 +493,6 @@
               "objects": {}
             }
           },
-          "922358dc78281a61dc99": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "bbcaaf27d9b4567838b0",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Biggest week bn"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
-            "singleVisual": {
-              "visualType": "cardVisual",
-              "objects": {}
-            }
-          },
-          "99d3b2ead1d908b6750f": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "dc017fd21ba2c41ce6c7",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Note spent"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
-            "singleVisual": {
-              "visualType": "cardVisual",
-              "objects": {}
-            }
-          },
           "a1d71a7c936dd16672bf": {
             "singleVisual": {
               "visualType": "textbox",
@@ -770,31 +620,6 @@
                   }
                 ]
               }
-            }
-          },
-          "dc699136291c96afffb6": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "e2cd9053d552e4bb8ca8",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Note biggest week"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
-            "singleVisual": {
-              "visualType": "cardVisual",
-              "objects": {}
             }
           },
           "e194e6af4b81defd07c3": {
@@ -940,28 +765,27 @@
               "objects": {}
             }
           },
-          "efbaac2471656eed0bd5": {
-            "filters": {
-              "byExpr": [
-                {
-                  "name": "5c88c9986c49ed5a2d3e",
-                  "type": "Advanced",
-                  "expression": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Entity": "Measures_"
-                        }
-                      },
-                      "Property": "Note average payment"
-                    }
-                  },
-                  "howCreated": 0
-                }
-              ]
-            },
+          "22f33b4d9f81a1c3a36e": {
             "singleVisual": {
-              "visualType": "cardVisual",
+              "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6865",
+              "objects": {}
+            }
+          },
+          "39669507bcf7083bd043": {
+            "singleVisual": {
+              "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6865",
+              "objects": {}
+            }
+          },
+          "e4287d1e8a0fbfb5e93b": {
+            "singleVisual": {
+              "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6865",
+              "objects": {}
+            }
+          },
+          "e75b2b488b8c3771a60c": {
+            "singleVisual": {
+              "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6865",
               "objects": {}
             }
           }

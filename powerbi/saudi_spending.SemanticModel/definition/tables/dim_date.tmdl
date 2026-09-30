@@ -59,6 +59,15 @@ table dim_date
 
 		annotation SummarizationSetBy = User
 
+	column week_of_year
+		dataType: int64
+		formatString: 0
+		lineageTag: c36c934c-aaab-453e-982f-0f03b5bf7320
+		summarizeBy: none
+		sourceColumn: week_of_year
+
+		annotation SummarizationSetBy = User
+
 	column ramadan_days
 		dataType: int64
 		formatString: 0
@@ -73,15 +82,6 @@ table dim_date
 		lineageTag: 7d7cc538-e4da-46cb-8d9e-44e1790927f0
 		summarizeBy: none
 		sourceColumn: eid
-
-		annotation SummarizationSetBy = User
-
-	column week_of_year
-		dataType: int64
-		formatString: 0
-		lineageTag: c36c934c-aaab-453e-982f-0f03b5bf7320
-		summarizeBy: none
-		sourceColumn: week_of_year
 
 		annotation SummarizationSetBy = User
 
@@ -170,4 +170,3 @@ table dim_date
 	annotation PBI_NavigationStepName = Navigation
 
 	annotation PBI_ResultType = Table
-

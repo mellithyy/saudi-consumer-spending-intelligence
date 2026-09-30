@@ -134,7 +134,7 @@ the warehouse's fact table (each file adds up to 2,937.77 billion SAR). It also 
 use: the week type (normal, part or full Ramadan, Eid), the Ramadan phase and the day of the month a week starts.
 
 **Report.** Saved as a Power BI Project in [`powerbi/`](powerbi): the model (TMDL) and the pages (JSON) are text
-files, so every change shows up in Git. 42 DAX measures. Choices worth knowing:
+files, so every change shows up in Git. 48 DAX measures. Choices worth knowing:
 - Growth compares the same week numbers a year before, using only weeks found in both years, because 2025 has
   27 weeks so far and 2023 has 53.
 - The titles are DAX measures, so they follow the filters: "In 2025, spending in Khobar grew 8.4%, faster than
@@ -142,8 +142,16 @@ files, so every change shows up in Git. 42 DAX measures. Choices worth knowing:
 - The source has no sector figures inside a city. When a city and a sector are both picked, the Overview shows
   "Pick cities or sectors, not both" instead of a number that would be wrong.
 - The Year filter can't be cleared, because the titles and the growth figures need one year.
+- Two free, certified custom visuals from AppSource. The Overview cards (number, SVG sparkline, change chip) and
+  the Sectors table are HTML written by DAX measures and shown by HTML Content. The Cities growth chart is a
+  Vega-Lite bullet chart drawn by Deneb: each bar is a city's growth, each tick its growth a year before.
+- Colours carry one meaning each: green with ▲ for up and red with ▼ for down, against the same weeks a year
+  before; dark slate for what to look at (a city above the national figure, the payday weeks, 2025). Arrows and
+  signs always go with the colour, and every pair of colours was checked for colour-blind readers.
+- The first version, with Power BI's own visuals only, is kept as the Git tag
+  [`dashboard-v1`](https://github.com/mellithyy/saudi-consumer-spending-intelligence/tree/dashboard-v1).
 
-[`powerbi/checks.dax`](powerbi/checks.dax) holds 28 test queries with the expected result of each, for example
+[`powerbi/checks.dax`](powerbi/checks.dax) holds 33 test queries with the expected result of each, for example
 the 2025 national total (361.97 billion SAR, +6.4%) and the Ramadan figures above. Paste them into DAX query
 view to re-check the numbers after a refresh.
 

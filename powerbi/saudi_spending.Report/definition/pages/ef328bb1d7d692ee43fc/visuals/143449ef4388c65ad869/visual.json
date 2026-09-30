@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "143449ef4388c65ad869",
   "position": {
     "x": 880,
@@ -98,7 +98,8 @@
             },
             "direction": "Descending"
           }
-        ]
+        ],
+        "isDefaultSort": false
       }
     },
     "objects": {
@@ -440,7 +441,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#13161B'"
+                      "Value": "'#344054'"
                     }
                   }
                 }

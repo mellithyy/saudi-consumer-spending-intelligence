@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "ded79ae4ac3dd73cb39e",
   "position": {
     "x": 904,
@@ -86,7 +86,8 @@
             },
             "direction": "Ascending"
           }
-        ]
+        ],
+        "isDefaultSort": false
       }
     },
     "objects": {
@@ -219,7 +220,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#C9D1DA'"
+                      "Value": "'#D0D5DD'"
                     }
                   }
                 }
@@ -260,7 +261,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#C9D1DA'"
+                      "Value": "'#D0D5DD'"
                     }
                   }
                 }
@@ -301,7 +302,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#C9D1DA'"
+                      "Value": "'#D0D5DD'"
                     }
                   }
                 }
@@ -342,7 +343,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#C9D1DA'"
+                      "Value": "'#D0D5DD'"
                     }
                   }
                 }
@@ -383,7 +384,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#13161B'"
+                      "Value": "'#344054'"
                     }
                   }
                 }

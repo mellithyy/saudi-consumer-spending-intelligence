@@ -1,59 +1,74 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "b44921c489d9357a3364",
+  "name": "e75b2b488b8c3771a60c",
   "position": {
-    "x": 366,
-    "y": 499,
-    "z": 23000,
-    "height": 18,
-    "width": 190,
-    "tabOrder": 23000
+    "x": 112,
+    "y": 120,
+    "z": 10000,
+    "height": 90,
+    "width": 246,
+    "tabOrder": 10000
   },
   "visual": {
-    "visualType": "textbox",
+    "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6865",
+    "query": {
+      "queryState": {
+        "content": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "HTML KPI spent"
+                }
+              },
+              "queryRef": "Measures_.HTML KPI spent",
+              "nativeQueryRef": "HTML KPI spent"
+            }
+          ]
+        }
+      }
+    },
     "objects": {
-      "general": [
+      "contentFormatting": [
         {
           "properties": {
-            "paragraphs": [
-              {
-                "textRuns": [
-                  {
-                    "value": "■",
-                    "textStyle": {
-                      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
-                      "fontSize": "9pt",
-                      "color": "#344054"
-                    }
-                  },
-                  {
-                    "value": " Spending    ",
-                    "textStyle": {
-                      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
-                      "fontSize": "9pt",
-                      "color": "#4F5966"
-                    }
-                  },
-                  {
-                    "value": "■",
-                    "textStyle": {
-                      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
-                      "fontSize": "9pt",
-                      "color": "#AEB7C2"
-                    }
-                  },
-                  {
-                    "value": " Payments",
-                    "textStyle": {
-                      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
-                      "fontSize": "9pt",
-                      "color": "#4F5966"
+            "showRawHtml": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "fontFamily": {
+              "expr": {
+                "Literal": {
+                  "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+                }
+              }
+            },
+            "fontColour": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#13161B'"
                     }
                   }
-                ],
-                "horizontalTextAlignment": "right"
+                }
               }
-            ]
+            },
+            "noDataMessage": {
+              "expr": {
+                "Literal": {
+                  "Value": "' '"
+                }
+              }
+            }
           }
         }
       ]
@@ -144,8 +159,21 @@
             }
           }
         }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Spending in the year picked, its growth on the same weeks a year before, and the weekly line'"
+                }
+              }
+            }
+          }
+        }
       ]
     },
-    "drillFilterOtherVisuals": false
+    "drillFilterOtherVisuals": true
   }
 }
