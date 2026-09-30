@@ -9,6 +9,7 @@ CREATE TABLE dim_date (
     year         INTEGER NOT NULL,
     quarter      INTEGER NOT NULL,
     month        INTEGER NOT NULL,
+    week_of_year INTEGER NOT NULL,      -- 1 for the year's first Sunday, up to 53; compares the same weeks across years
     ramadan_days INTEGER NOT NULL,      -- how many of the week's 7 days are in Ramadan (0 to 7)
     eid          VARCHAR                -- 'Eid al-Fitr', 'Eid al-Adha', or empty (NULL) for other weeks
 );

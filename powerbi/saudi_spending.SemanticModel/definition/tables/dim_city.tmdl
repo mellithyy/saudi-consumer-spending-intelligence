@@ -1,0 +1,35 @@
+table dim_city
+	lineageTag: 225b9731-6b66-49b8-af0b-3fd9d38eb396
+
+	column city_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 41891a23-26fe-45cb-a849-8de5cb0dfb09
+		summarizeBy: none
+		sourceColumn: city_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column city
+		dataType: string
+		lineageTag: b040c259-96d4-4b8e-824e-9b81b8e91f68
+		summarizeBy: none
+		sourceColumn: city
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_city = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "dim_city.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

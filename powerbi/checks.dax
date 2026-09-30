@@ -1,0 +1,98 @@
+-- Test queries for the dashboard. Open powerbi/saudi_spending.pbip, go to DAX query view, paste one query
+-- (from its '-- #' line to the next) and run it: the result should match the numbers in its heading.
+
+-- # Overview 2025, whole country (expect 361.97, +6.4%, 62.7, 20.10)
+EVALUATE CALCULATETABLE (
+    ROW ( "spent", [Spent bn SAR], "growth", [Spending growth %], "avg", [Average payment SAR], "biggest", [Biggest week bn],
+          "title", [Title Overview], "sub", [Subtitle weekly chart], "n1", [Note spent], "n2", [Note growth],
+          "n3", [Note average payment], "n4", [Note biggest week] ),
+    dim_date[year] = 2025 )
+-- # Overview 2025, Khobar (expect 10.36, +8.4%, prev 5.8%, 85.7)
+EVALUATE CALCULATETABLE (
+    ROW ( "spent", [Spent bn SAR], "growth", [Spending growth %], "avg", [Average payment SAR], "title", [Title Overview],
+          "sub", [Subtitle weekly chart], "n4", [Note biggest week] ),
+    dim_date[year] = 2025, dim_city[city] = "Khobar" )
+-- # Overview 2025, Jewelry (expect 9.19, +28.5%, 1304.9)
+EVALUATE CALCULATETABLE (
+    ROW ( "spent", [Spent bn SAR], "growth", [Spending growth %], "avg", [Average payment SAR], "title", [Title Overview] ),
+    dim_date[year] = 2025, dim_sector[sector] = "Jewelry" )
+-- # Overview 2025, Khobar and Jewelry (expect blanks and the pick-one title)
+EVALUATE CALCULATETABLE (
+    ROW ( "spent", [Spent bn SAR], "title", [Title Overview], "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" )
+-- # Titles for other years (expect 2024 +8.8% vs 9.5%, 2023 +9.5% vs 18.0%, 2022 +18.0% no comparison)
+EVALUATE ADDCOLUMNS ( FILTER ( VALUES ( dim_date[year] ), dim_date[year] >= 2022 ),
+    "title", CALCULATE ( [Title Overview] ), "n1", CALCULATE ( [Note spent] ), "n3", CALCULATE ( [Note average payment] ),
+    "cities", CALCULATE ( [Title Cities] ), "sectors", CALCULATE ( [Title Sectors] ) )
+-- # Growth year by year (expect 18.0/40.1, 9.5/23.3, 8.8/15.7, 6.4/11.9)
+EVALUATE ADDCOLUMNS ( FILTER ( VALUES ( dim_date[year] ), dim_date[year] >= 2022 ),
+    "spending", [Spending growth %], "payments", [Payments growth %] )
+-- # Payday (expect -0.2, -6.4, -9.7, +8.3, +8.0)
+EVALUATE SUMMARIZECOLUMNS ( dim_date[month_days], dim_date[month_days_order], "idx", [Payday index %], "colour", [Colour payday] )
+-- # Weekly chart 2025: labels only on 23 Mar (20.10) and 30 Mar (10.54); subtitle '2025, billion SAR'; axis top = 1.18 x highest
+EVALUATE FILTER ( CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_date[week_start], "label", [Weekly chart label bn] ),
+    dim_date[year] = 2025 ), NOT ISBLANK ( [label] ) )
+-- # Weekly axis and subtitle (expect 2025 about 23.72 = 20.10 x 1.18; Khobar about 0.58)
+EVALUATE ROW ( "axis 2025", CALCULATE ( [Weekly axis max], dim_date[year] = 2025 ),
+    "axis Khobar", CALCULATE ( [Weekly axis max], dim_date[year] = 2025, dim_city[city] = "Khobar" ),
+    "sub", CALCULATE ( [Subtitle weekly chart], dim_date[year] = 2025 ),
+    "sub Khobar", CALCULATE ( [Subtitle weekly chart], dim_date[year] = 2025, dim_city[city] = "Khobar" ) )
+-- # Cities 2025 (expect Riyadh 10.9 34.5 68.2 ... Khobar 8.4 2.9 85.7)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_city[city], "growth", [Spending growth %], "share", [Share of national %],
+    "avg", [Average payment SAR], "colour", [Colour city] ), dim_date[year] = 2025 )
+-- # Cities page texts 2025
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Cities], "s1", [Subtitle city growth], "s2", [Subtitle city share], "s3", [Subtitle city payment] ),
+    dim_date[year] = 2025 )
+-- # Sectors 2025 (expect 17 rows as in the design, flag on Jewelry and Public utilities)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_sector[sector], "spent", [Spent bn SAR], "growth", [Spending growth %],
+    "payments", [Payments growth %], "avg", [Average payment SAR], "change", [Average payment change %], "flag", [Rise or fall flag] ),
+    dim_date[year] = 2025 )
+-- # Sectors page texts 2025
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Sectors], "sentence", [Sectors sentence] ), dim_date[year] = 2025 )
+-- # Ramadan national lift (expect +33.4%)
+EVALUATE ROW ( "national", [Ramadan last week lift %] )
+-- # Ramadan by sector (expect clothing 208.1, jewelry 172.3, education -56.3)
+EVALUATE SUMMARIZECOLUMNS ( dim_sector[sector], "lift", [Ramadan last week lift %], "colour", [Colour Ramadan lift] )
+-- # Ramadan by city (expect Makkah 98.3 ... Khobar 15.7)
+EVALUATE SUMMARIZECOLUMNS ( dim_city[city], "lift", [Ramadan last week lift %] )
+-- # Slope (expect 2025: 13.38, 20.10, 10.54)
+EVALUATE SUMMARIZECOLUMNS ( dim_date[ramadan_year], dim_date[ramadan_phase], dim_date[ramadan_phase_order],
+    FILTER ( VALUES ( dim_date[ramadan_phase] ), NOT ISBLANK ( dim_date[ramadan_phase] ) ), "avg week", [Average week bn SAR] )
+-- # Multi-select: Khobar and Dammam 2025 (expect 28.29, +8.4%, 79.4, 'spending in Dammam and Khobar')
+EVALUATE CALCULATETABLE (
+    ROW ( "spent", [Spent bn SAR], "growth", [Spending growth %], "avg", [Average payment SAR], "title", [Title Overview],
+          "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, TREATAS ( { "Khobar", "Dammam" }, dim_city[city] ) )
+-- # Multi-select: 3 cities (expect 'spending in Dammam, Khobar and Riyadh grew 10.4%')
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, TREATAS ( { "Khobar", "Dammam", "Riyadh" }, dim_city[city] ) )
+-- # Multi-select: clothing and jewelry 2025 (expect 35.84, +12.6%, 175.6, 'spending on clothing & footwear and jewelry')
+EVALUATE CALCULATETABLE (
+    ROW ( "spent", [Spent bn SAR], "growth", [Spending growth %], "avg", [Average payment SAR], "title", [Title Overview],
+          "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, TREATAS ( { "Clothing & footwear", "Jewelry" }, dim_sector[sector] ) )
+-- # Sector sentence and colours after the changes
+EVALUATE CALCULATETABLE ( ROW ( "sentence", [Sectors sentence], "khobar colour", CALCULATE ( [Colour city], dim_city[city] = "Khobar" ) ),
+    dim_date[year] = 2025 )
+-- # Names: 3 cities (expect 'Dammam, Khobar and Riyadh' in title and subtitle)
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, TREATAS ( { "Khobar", "Dammam", "Riyadh" }, dim_city[city] ) )
+-- # Names: 5 cities (expect '5 cities' in the title, all five names in the subtitle)
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, TREATAS ( { "Abha", "Buraidah", "Dammam", "Hail", "Jeddah" }, dim_city[city] ) )
+-- # Names: all but Riyadh (expect 'all cities except Riyadh', subtitle 'All cities except Riyadh')
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, dim_city[city] <> "Riyadh" )
+-- # Names: all 11 cities (expect 'all 11 cities', same numbers as the whole country)
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "spent", [Spent bn SAR] ),
+    dim_date[year] = 2025, TREATAS ( VALUES ( dim_city[city] ), dim_city[city] ) )
+-- # Names: 2 sectors (expect 'clothing & footwear and jewelry')
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, TREATAS ( { "Clothing & footwear", "Jewelry" }, dim_sector[sector] ) )
+-- # Names: all sectors but hotels and jewelry (expect '15 sectors' in the title, 'All sectors except Hotels and Jewelry' in the subtitle)
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "sub", [Subtitle weekly chart] ),
+    dim_date[year] = 2025, NOT dim_sector[sector] IN { "Hotels", "Jewelry" } )
+-- # Title wording for every sector, 2025 and 2024 (two rises, two falls, and turns)
+EVALUATE ADDCOLUMNS ( VALUES ( dim_sector[sector] ),
+    "2025", CALCULATE ( [Title Overview], dim_date[year] = 2025 ),
+    "2024", CALCULATE ( [Title Overview], dim_date[year] = 2024 ) )

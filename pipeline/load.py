@@ -57,6 +57,8 @@ def build(con):
             year(w.week_start),
             quarter(w.week_start),
             month(w.week_start),
+            -- Week number inside the year: days 1-7 of the year hold week 1's Sunday, days 8-14 week 2's, ...
+            (dayofyear(w.week_start) - 1) // 7 + 1,
             -- The shared days run from the later start to the earlier end. CASE, not coalesce: DuckDB's
             -- greatest() and least() skip a NULL, so a week with no Ramadan would get 7 days, not 0.
             CASE WHEN r.first_day IS NULL THEN 0
@@ -143,6 +145,9 @@ def check(con):
         "fact rows": ("SELECT count(*) FROM fact_weekly_spending", "SELECT count(*) FROM staging"),
         "weeks": ("SELECT count(*) FROM dim_date", "SELECT count(DISTINCT week_start) FROM staging"),
         "series": ("SELECT count(*) FROM dim_series", "SELECT count(DISTINCT series) FROM staging"),
+        # Same-week comparisons need each week number used once per year.
+        "weeks numbered": ("SELECT count(DISTINCT (year, week_of_year)) FROM dim_date",
+                           "SELECT count(DISTINCT week_start) FROM staging"),
         # Reconciliation: not one riyal or transaction lost or added on the way.
         "total value": ("SELECT sum(value_k_sar) FROM fact_weekly_spending", "SELECT sum(value_k_sar) FROM staging"),
         "total transactions": ("SELECT sum(transactions_k) FROM fact_weekly_spending",

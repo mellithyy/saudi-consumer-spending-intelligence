@@ -1,0 +1,82 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "3964ededf277f81ff336",
+  "displayName": "Ramadan and Eid",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "image": {
+            "image": {
+              "name": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'bg_4_ramadan.png'"
+                  }
+                }
+              },
+              "url": {
+                "expr": {
+                  "ResourcePackageItem": {
+                    "PackageName": "RegisteredResources",
+                    "PackageType": 1,
+                    "ItemName": "bg_4_ramadan.png"
+                  }
+                }
+              },
+              "scaling": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'Normal'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "d3c85a38eab02a25f9c7",
+      "target": "ded79ae4ac3dd73cb39e",
+      "type": "NoFilter"
+    },
+    {
+      "source": "d3c85a38eab02a25f9c7",
+      "target": "746a98a0df1c0c93d556",
+      "type": "NoFilter"
+    },
+    {
+      "source": "ded79ae4ac3dd73cb39e",
+      "target": "d3c85a38eab02a25f9c7",
+      "type": "NoFilter"
+    },
+    {
+      "source": "ded79ae4ac3dd73cb39e",
+      "target": "746a98a0df1c0c93d556",
+      "type": "NoFilter"
+    },
+    {
+      "source": "746a98a0df1c0c93d556",
+      "target": "d3c85a38eab02a25f9c7",
+      "type": "NoFilter"
+    },
+    {
+      "source": "746a98a0df1c0c93d556",
+      "target": "ded79ae4ac3dd73cb39e",
+      "type": "NoFilter"
+    }
+  ]
+}

@@ -9,3 +9,5 @@ data/clean/
 
 # The warehouse (load.py rebuilds it from the clean file in seconds)
 data/*.duckdb
+# The Parquet files for Power BI (export.py rebuilds them from the warehouse in seconds)
+data/powerbi/

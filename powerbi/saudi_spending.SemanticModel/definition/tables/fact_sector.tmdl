@@ -1,0 +1,62 @@
+table fact_sector
+	lineageTag: 02988942-1fcf-48bb-a4af-e065b58626e1
+
+	measure 'Sector bn SAR' = DIVIDE ( SUM ( fact_sector[value_k_sar] ), 1000000 )
+		lineageTag: 7dbcbeda-4dad-43be-bba5-863ba40939d8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 807bf3e5-a2b0-45cb-ad6b-ac867c3b2854
+		summarizeBy: none
+		sourceColumn: date_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column sector_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c0910cb8-61c6-42a5-ab43-f9aa23aabe27
+		summarizeBy: none
+		sourceColumn: sector_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column transactions_k
+		dataType: int64
+		formatString: 0
+		lineageTag: a97c4c28-19a9-44e5-b19c-690323163434
+		summarizeBy: sum
+		sourceColumn: transactions_k
+
+		annotation SummarizationSetBy = Automatic
+
+	column value_k_sar
+		dataType: int64
+		formatString: 0
+		lineageTag: 4c24d28e-222e-4c41-8a36-7e1db87289ce
+		summarizeBy: sum
+		sourceColumn: value_k_sar
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_sector = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "fact_sector.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

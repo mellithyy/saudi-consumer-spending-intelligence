@@ -1,0 +1,74 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "name": "791035c101bc943e1084",
+  "position": {
+    "x": 698.84498480243155,
+    "y": 4.3768996960486319,
+    "z": 1000,
+    "height": 116.71732522796353,
+    "width": 350.15197568389056,
+    "tabOrder": 1000
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_sector"
+                    }
+                  },
+                  "Property": "Sector bn SAR"
+                }
+              },
+              "queryRef": "fact_sector.Sector bn SAR",
+              "nativeQueryRef": "Sector bn SAR"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_sector"
+                  }
+                },
+                "Property": "Sector bn SAR"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "value": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "fact_sector.Sector bn SAR"
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

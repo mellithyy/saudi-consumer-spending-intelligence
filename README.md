@@ -2,7 +2,10 @@
 
 Weekly card spending in Saudi Arabia, by city and by sector, from May 2020 to July 2025.
 
-**Status: in progress.** Stages 1 to 4 of 7 (extraction, cleaning and data-quality checks, SQL warehouse, SQL analysis) are done.
+**Status: in progress.** Stages 1 to 4 of 7 (extraction, cleaning and data-quality checks, SQL warehouse, SQL analysis)
+are done, and the Power BI dashboard of stage 5 is built. Next: the Excel management report, then a forecast.
+
+![The dashboard's Overview page](reports/figures/dashboard_1_overview.png)
 
 ## Data
 - Source: Saudi Central Bank (SAMA), weekly point-of-sale (POS) transactions, published on the
@@ -34,7 +37,7 @@ A star schema in DuckDB, stored in one file (`data/warehouse.duckdb`). The table
 | Table | Rows | One row is | Columns |
 |---|---|---|---|
 | `fact_weekly_spending` | 7,830 | one week of one series | `date_key`, `series_key`, `transactions_k`, `value_k_sar` |
-| `dim_date` | 270 | one week | `date_key`, `week_start`, `source_date`, year, quarter, month, `ramadan_days`, `eid` |
+| `dim_date` | 270 | one week | `date_key`, `week_start`, `source_date`, year, quarter, month, `week_of_year`, `ramadan_days`, `eid` |
 | `dim_series` | 29 | one series | `series_key`, `series`, `level` |
 
 - Primary and foreign keys refuse duplicates and broken links.
@@ -112,12 +115,44 @@ Average week, 2021 against 2024 (full years only):
 - Large moves in small sectors (Public Utilities -39.2% in 2025) may come from changes in how shops are
   classified. Check them against SAMA's weekly reports before using them.
 
+## Power BI dashboard
+Five pages for a planning team at a bank, a retailer or a mall operator:
+
+| Page | The question it answers |
+|---|---|
+| Overview | How big is card spending, how fast is it growing, and when in the month do people spend? One or more cities, or one or more sectors, can be picked |
+| [Cities](reports/figures/dashboard_2_cities.png) | Where is the money spent, which cities grow fastest, and where is each payment biggest? |
+| [Sectors](reports/figures/dashboard_3_sectors.png) | What do people spend on, and does growth come from more payments or bigger ones? |
+| [Ramadan and Eid](reports/figures/dashboard_4_ramadan_and_eid.png) | When is the biggest season of the year, and what should be ready for it? |
+| [About](reports/figures/dashboard_5_about.png) | What each page answers, the words used, and the limits of the data |
+
+**Model.** [`pipeline/export.py`](pipeline/export.py) exports the warehouse to Parquet files in `data/powerbi/`,
+because Power BI has no DuckDB connector and Parquet keeps every column's type. Power BI gets one fact table
+per level (national 270 rows, city 2,970, sector 4,590), so every measure is a plain sum and a city total can
+never be added to a sector total. `export.py` stops unless the three files together hold every row and riyal of
+the warehouse's fact table (each file adds up to 2,937.77 billion SAR). It also writes the week labels the pages
+use: the week type (normal, part or full Ramadan, Eid), the Ramadan phase and the day of the month a week starts.
+
+**Report.** Saved as a Power BI Project in [`powerbi/`](powerbi): the model (TMDL) and the pages (JSON) are text
+files, so every change shows up in Git. 42 DAX measures. Choices worth knowing:
+- Growth compares the same week numbers a year before, using only weeks found in both years, because 2025 has
+  27 weeks so far and 2023 has 53.
+- The titles are DAX measures, so they follow the filters: "In 2025, spending in Khobar grew 8.4%, faster than
+  2024's 5.8%".
+- The source has no sector figures inside a city. When a city and a sector are both picked, the Overview shows
+  "Pick cities or sectors, not both" instead of a number that would be wrong.
+- The Year filter can't be cleared, because the titles and the growth figures need one year.
+
+[`powerbi/checks.dax`](powerbi/checks.dax) holds 28 test queries with the expected result of each, for example
+the 2025 national total (361.97 billion SAR, +6.4%) and the Ramadan figures above. Paste them into DAX query
+view to re-check the numbers after a refresh.
+
 ## Plan
 1. Extract: download the data from the API, with checks ✅
 2. Clean the data and run data-quality checks ✅
 3. Load it into a SQL warehouse (star schema) ✅
 4. Analyse seasonality (Ramadan, Eid), city trends and sector growth with SQL ✅
-5. Build a Power BI dashboard and an Excel management report
+5. Build a Power BI dashboard ✅ and an Excel management report
 6. Forecast the next quarter
 7. Automate the refresh and publish
 
@@ -129,9 +164,14 @@ python -m venv .venv
 .venv\Scripts\python pipeline/clean.py
 .venv\Scripts\python pipeline/load.py
 .venv\Scripts\python pipeline/analyse.py
+.venv\Scripts\python pipeline/export.py
 ```
 The raw file is saved to `data/raw/pos_transactions.csv`, the clean table to `data/clean/pos_weekly.csv`,
-the warehouse to `data/warehouse.duckdb` and the analysis results to `reports/analysis/`.
+the warehouse to `data/warehouse.duckdb`, the analysis results to `reports/analysis/` and the files for
+Power BI to `data/powerbi/`.
+
+To open the dashboard: open `powerbi/saudi_spending.pbip` in Power BI Desktop, set the `DataFolder` parameter
+(Home > Transform data > Edit parameters) to the full path of your `data\powerbi\` folder, then select Refresh.
 `.venv\Scripts\python explore/profile_raw.py` prints the data profile and re-checks every finding on the raw file.
 
 ## Author

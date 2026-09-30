@@ -1,0 +1,173 @@
+table dim_date
+	lineageTag: 0ecfd318-cb0f-43bb-ba60-679b70375e83
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5ec4f7f5-aa44-4b6c-8897-6ad6795cc457
+		summarizeBy: none
+		sourceColumn: date_key
+
+		annotation SummarizationSetBy = User
+
+	column week_start
+		dataType: dateTime
+		formatString: d mmm yyyy
+		lineageTag: cfc98b1c-e21d-47d4-8fd8-f5a3a0618722
+		summarizeBy: none
+		sourceColumn: week_start
+
+		annotation SummarizationSetBy = User
+
+	column source_date
+		dataType: dateTime
+		isHidden
+		formatString: d mmm yyyy
+		lineageTag: b5488ee6-8b10-461a-b37f-9d989f576732
+		summarizeBy: none
+		sourceColumn: source_date
+
+		annotation SummarizationSetBy = User
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: fc953576-bc3d-4e10-a6f8-7da7c37610df
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = User
+
+	column quarter
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0efe89e8-f36d-4532-90de-bb5d89301d33
+		summarizeBy: none
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = User
+
+	column month
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6b35b786-1534-439f-8983-16e7607b71a7
+		summarizeBy: none
+		sourceColumn: month
+
+		annotation SummarizationSetBy = User
+
+	column ramadan_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 72c950ba-7d79-4dc6-9387-6537a3d2dd4a
+		summarizeBy: none
+		sourceColumn: ramadan_days
+
+		annotation SummarizationSetBy = User
+
+	column eid
+		dataType: string
+		lineageTag: 7d7cc538-e4da-46cb-8d9e-44e1790927f0
+		summarizeBy: none
+		sourceColumn: eid
+
+		annotation SummarizationSetBy = User
+
+	column week_of_year
+		dataType: int64
+		formatString: 0
+		lineageTag: c36c934c-aaab-453e-982f-0f03b5bf7320
+		summarizeBy: none
+		sourceColumn: week_of_year
+
+		annotation SummarizationSetBy = User
+
+	column week_type
+		dataType: string
+		lineageTag: ab5f03d1-b9e8-596e-91fd-11b02a0fce11
+		summarizeBy: none
+		sourceColumn: week_type
+		sortByColumn: week_type_order
+
+		annotation SummarizationSetBy = User
+
+	column week_type_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9aef3813-02dc-5fc0-a22b-9dd8a42572fa
+		summarizeBy: none
+		sourceColumn: week_type_order
+
+		annotation SummarizationSetBy = User
+
+	column phase
+		dataType: string
+		lineageTag: 9f63a7a4-7eda-5b86-a58f-490d3421db09
+		summarizeBy: none
+		sourceColumn: phase
+
+		annotation SummarizationSetBy = User
+
+	column ramadan_phase
+		dataType: string
+		lineageTag: c402d92a-8c5e-5472-9e3d-b5a7d739f3e3
+		summarizeBy: none
+		sourceColumn: ramadan_phase
+		sortByColumn: ramadan_phase_order
+
+		annotation SummarizationSetBy = User
+
+	column ramadan_phase_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0bd4d7a3-73de-54a5-8dda-155de640b821
+		summarizeBy: none
+		sourceColumn: ramadan_phase_order
+
+		annotation SummarizationSetBy = User
+
+	column ramadan_year
+		dataType: int64
+		formatString: 0
+		lineageTag: fa10e439-ac58-5e87-afd2-a4807a348228
+		summarizeBy: none
+		sourceColumn: ramadan_year
+
+		annotation SummarizationSetBy = User
+
+	column month_days
+		dataType: string
+		lineageTag: 08d6a391-e771-5eca-86a7-e36fd7638f5c
+		summarizeBy: none
+		sourceColumn: month_days
+		sortByColumn: month_days_order
+
+		annotation SummarizationSetBy = User
+
+	column month_days_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 41b138b2-9d2c-5a18-96d6-92af457052f1
+		summarizeBy: none
+		sourceColumn: month_days_order
+
+		annotation SummarizationSetBy = User
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "dim_date.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

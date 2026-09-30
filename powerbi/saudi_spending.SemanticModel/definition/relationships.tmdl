@@ -1,0 +1,20 @@
+relationship AutoDetected_5c826df5-9f90-4015-8426-62d098778a6c
+	fromColumn: fact_national.date_key
+	toColumn: dim_date.date_key
+
+relationship AutoDetected_04a2d706-78e3-42b2-b49a-6187de3dcde7
+	fromColumn: fact_city.date_key
+	toColumn: dim_date.date_key
+
+relationship AutoDetected_f83edfef-c695-42b2-8d05-4e8e7fefad86
+	fromColumn: fact_sector.date_key
+	toColumn: dim_date.date_key
+
+relationship AutoDetected_941b7282-5632-4eed-804f-a4ce0eba403c
+	fromColumn: fact_city.city_key
+	toColumn: dim_city.city_key
+
+relationship AutoDetected_4310250f-d780-4c5f-9307-0851ed13bde3
+	fromColumn: fact_sector.sector_key
+	toColumn: dim_sector.sector_key
+

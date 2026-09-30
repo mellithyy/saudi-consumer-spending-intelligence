@@ -1,0 +1,50 @@
+table fact_national
+	lineageTag: c083961f-ca8d-4db5-90d0-672f96e80375
+
+	measure 'National bn SAR' = DIVIDE ( SUM ( fact_national[value_k_sar] ), 1000000 )
+		lineageTag: b33eddee-1ede-4458-83f3-35271e558368
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9a481952-3a1f-459c-b307-f247a6e71714
+		summarizeBy: none
+		sourceColumn: date_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column transactions_k
+		dataType: int64
+		formatString: 0
+		lineageTag: 28f487f7-b6f2-46c0-b49f-a708873ca546
+		summarizeBy: sum
+		sourceColumn: transactions_k
+
+		annotation SummarizationSetBy = Automatic
+
+	column value_k_sar
+		dataType: int64
+		formatString: 0
+		lineageTag: 73696a9c-657f-4daa-a3bb-81d36ee7575a
+		summarizeBy: sum
+		sourceColumn: value_k_sar
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_national = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "fact_national.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,41 @@
+table dim_sector
+	lineageTag: 410655be-c739-4cab-930a-22dd47166c48
+
+	column sector_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6ba78ba9-7787-4c84-906a-39066abe65c9
+		summarizeBy: none
+		sourceColumn: sector_key
+
+		annotation SummarizationSetBy = User
+
+	column sector
+		dataType: string
+		lineageTag: 04193a35-4d49-4804-b02c-0899b73101ed
+		summarizeBy: none
+		sourceColumn: sector
+
+		annotation SummarizationSetBy = User
+
+	column sector_full
+		dataType: string
+		lineageTag: 6153db63-bddd-5aba-bb35-a3d87fd1ca31
+		summarizeBy: none
+		sourceColumn: sector_full
+
+		annotation SummarizationSetBy = User
+
+	partition dim_sector = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "dim_sector.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "ef328bb1d7d692ee43fc",
+  "displayName": "Sectors",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "image": {
+            "image": {
+              "name": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'bg_3_sectors.png'"
+                  }
+                }
+              },
+              "url": {
+                "expr": {
+                  "ResourcePackageItem": {
+                    "PackageName": "RegisteredResources",
+                    "PackageType": 1,
+                    "ItemName": "bg_3_sectors.png"
+                  }
+                }
+              },
+              "scaling": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'Normal'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "b14006dbee4f1f690dcf",
+      "target": "dacd169a193f06ed3bd5",
+      "type": "NoFilter"
+    },
+    {
+      "source": "b14006dbee4f1f690dcf",
+      "target": "143449ef4388c65ad869",
+      "type": "NoFilter"
+    },
+    {
+      "source": "b14006dbee4f1f690dcf",
+      "target": "4394447b5f90cdc6f2a4",
+      "type": "NoFilter"
+    },
+    {
+      "source": "143449ef4388c65ad869",
+      "target": "dacd169a193f06ed3bd5",
+      "type": "NoFilter"
+    },
+    {
+      "source": "143449ef4388c65ad869",
+      "target": "b14006dbee4f1f690dcf",
+      "type": "NoFilter"
+    },
+    {
+      "source": "143449ef4388c65ad869",
+      "target": "4394447b5f90cdc6f2a4",
+      "type": "NoFilter"
+    }
+  ]
+}

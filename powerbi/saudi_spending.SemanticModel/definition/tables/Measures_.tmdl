@@ -1,0 +1,555 @@
+table Measures_
+	lineageTag: 1be87336-25ac-403e-b7aa-ae5e46aa3ed5
+
+	/// Card spending, billion SAR: the country, or the city or sector picked on the Overview. Blank if both are picked.
+	measure 'Spent bn SAR' =
+			SWITCH (
+			    TRUE (),
+			    ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ), BLANK (),
+			    ISFILTERED ( dim_city[city] ), [City bn SAR],
+			    ISFILTERED ( dim_sector[sector] ), [Sector bn SAR],
+			    [National bn SAR]
+			)
+		formatString: #,0.00
+		displayFolder: 1 Base
+		lineageTag: 5438f43d-836c-4e21-8251-7b63fd037ddb
+
+	/// Number of card payments, millions. Same focus rule as Spent bn SAR.
+	measure 'Payments m' =
+			SWITCH (
+			    TRUE (),
+			    ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ), BLANK (),
+			    ISFILTERED ( dim_city[city] ), DIVIDE ( SUM ( fact_city[transactions_k] ), 1000 ),
+			    ISFILTERED ( dim_sector[sector] ), DIVIDE ( SUM ( fact_sector[transactions_k] ), 1000 ),
+			    DIVIDE ( SUM ( fact_national[transactions_k] ), 1000 )
+			)
+		formatString: #,0.0
+		displayFolder: 1 Base
+		lineageTag: 883439b2-4701-4e0e-9444-caa202c4b759
+
+	/// Total spent divided by total payments (never an average of averages). Both columns are in thousands, so the thousands cancel.
+	measure 'Average payment SAR' =
+			SWITCH (
+			    TRUE (),
+			    ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ), BLANK (),
+			    ISFILTERED ( dim_city[city] ), DIVIDE ( SUM ( fact_city[value_k_sar] ), SUM ( fact_city[transactions_k] ) ),
+			    ISFILTERED ( dim_sector[sector] ), DIVIDE ( SUM ( fact_sector[value_k_sar] ), SUM ( fact_sector[transactions_k] ) ),
+			    DIVIDE ( SUM ( fact_national[value_k_sar] ), SUM ( fact_national[transactions_k] ) )
+			)
+		formatString: #,0.0
+		displayFolder: 1 Base
+		lineageTag: 9b261f78-6dfa-488b-ad87-e813fb7ffb1a
+
+	/// Weeks in view: dim_date has one row per week.
+	measure Weeks = COUNTROWS ( dim_date )
+		formatString: 0
+		displayFolder: 1 Base
+		lineageTag: b11049be-5972-56d5-8792-e6f3b229b361
+
+	/// Spending in an average week in view, billion SAR.
+	measure 'Average week bn SAR' = DIVIDE ( [Spent bn SAR], [Weeks] )
+		formatString: #,0.00
+		displayFolder: 1 Base
+		lineageTag: 94ace2cd-f094-5228-83a4-eb7170a0f3d4
+
+	/// This year's spending on the week numbers the year before also has.
+	measure 'Spent same weeks bn' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR weeks_year_before =
+			    CALCULATETABLE (
+			        VALUES ( dim_date[week_of_year] ),
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1
+			    )
+			RETURN
+			    CALCULATE ( [Spent bn SAR], KEEPFILTERS ( weeks_year_before ) )
+		formatString: #,0.00
+		displayFolder: 2 Same weeks a year before
+		lineageTag: 307b6618-6204-501e-83aa-f1d6e4cc44ae
+
+	/// The year before's spending on the same week numbers as the weeks in view.
+	measure 'Spent year before bn' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR weeks_now = VALUES ( dim_date[week_of_year] )
+			VAR weeks_year_before =
+			    CALCULATETABLE (
+			        VALUES ( dim_date[week_of_year] ),
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1
+			    )
+			RETURN
+			    CALCULATE (
+			        [Spent bn SAR],
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1,
+			        INTERSECT ( weeks_now, weeks_year_before )
+			    )
+		formatString: #,0.00
+		displayFolder: 2 Same weeks a year before
+		lineageTag: 958ffa12-8e06-5c82-aec8-2e563e099f10
+
+	/// Spending growth on the same weeks a year before.
+	measure 'Spending growth %' =
+			VAR this_year_value = [Spent same weeks bn]
+			VAR year_before_value = [Spent year before bn]
+			RETURN
+			    DIVIDE ( this_year_value - year_before_value, year_before_value )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 2 Same weeks a year before
+		lineageTag: 95f31b86-8b3b-5cb7-ad94-ecaeefd06b1c
+
+	measure 'Payments same weeks m' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR weeks_year_before =
+			    CALCULATETABLE (
+			        VALUES ( dim_date[week_of_year] ),
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1
+			    )
+			RETURN
+			    CALCULATE ( [Payments m], KEEPFILTERS ( weeks_year_before ) )
+		formatString: #,0.0
+		displayFolder: 2 Same weeks a year before
+		lineageTag: 44e97459-2fad-5c12-9cab-07ac540ead33
+
+	measure 'Payments year before m' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR weeks_now = VALUES ( dim_date[week_of_year] )
+			VAR weeks_year_before =
+			    CALCULATETABLE (
+			        VALUES ( dim_date[week_of_year] ),
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1
+			    )
+			RETURN
+			    CALCULATE (
+			        [Payments m],
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1,
+			        INTERSECT ( weeks_now, weeks_year_before )
+			    )
+		formatString: #,0.0
+		displayFolder: 2 Same weeks a year before
+		lineageTag: 90af8a32-3e91-5a65-b56a-f7c757e3b9ac
+
+	/// Growth in the number of payments on the same weeks a year before.
+	measure 'Payments growth %' =
+			VAR this_year_value = [Payments same weeks m]
+			VAR year_before_value = [Payments year before m]
+			RETURN
+			    DIVIDE ( this_year_value - year_before_value, year_before_value )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 2 Same weeks a year before
+		lineageTag: ba709fe4-29d5-5c05-97d1-723ff7308bc3
+
+	measure 'Average payment same weeks SAR' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR weeks_year_before =
+			    CALCULATETABLE (
+			        VALUES ( dim_date[week_of_year] ),
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1
+			    )
+			RETURN
+			    CALCULATE ( [Average payment SAR], KEEPFILTERS ( weeks_year_before ) )
+		formatString: #,0.0
+		displayFolder: 2 Same weeks a year before
+		lineageTag: f7d437bd-43bd-513d-8e76-ef667f812a54
+
+	measure 'Average payment year before SAR' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR weeks_now = VALUES ( dim_date[week_of_year] )
+			VAR weeks_year_before =
+			    CALCULATETABLE (
+			        VALUES ( dim_date[week_of_year] ),
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1
+			    )
+			RETURN
+			    CALCULATE (
+			        [Average payment SAR],
+			        REMOVEFILTERS ( dim_date ),
+			        dim_date[year] = this_year - 1,
+			        INTERSECT ( weeks_now, weeks_year_before )
+			    )
+		formatString: #,0.0
+		displayFolder: 2 Same weeks a year before
+		lineageTag: 2d8a8b51-0a05-50e1-883d-3e95f51a2a3e
+
+	/// Change in the average payment on the same weeks a year before.
+	measure 'Average payment change %' =
+			VAR this_year_value = [Average payment same weeks SAR]
+			VAR year_before_value = [Average payment year before SAR]
+			RETURN
+			    DIVIDE ( this_year_value - year_before_value, year_before_value )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 2 Same weeks a year before
+		lineageTag: f67ed6cd-4d91-51fd-a934-4b87dd6561dc
+
+	/// The biggest week in view, billion SAR.
+	measure 'Biggest week bn' = MAXX ( VALUES ( dim_date[week_start] ), [Spent bn SAR] )
+		formatString: #,0.00
+		displayFolder: 3 Overview
+		lineageTag: 5f4f4d57-ef5f-55c6-9fc8-d8232e33c0ca
+
+	/// The average normal week (no Ramadan day, no Eid) of 2021 to 2025 in this group of month days, against the average of the five groups. It ignores the Year filter on purpose: one year has too few normal weeks in each group.
+	measure 'Payday index %' =
+			VAR normal_week =
+			    CALCULATE ( [Average week bn SAR], dim_date[week_type] = "Normal", dim_date[year] >= 2021 )
+			VAR five_groups =
+			    AVERAGEX (
+			        ALL ( dim_date[month_days], dim_date[month_days_order] ),
+			        CALCULATE ( [Average week bn SAR], dim_date[week_type] = "Normal", dim_date[year] >= 2021 )
+			    )
+			RETURN
+			    IF ( NOT ISBLANK ( normal_week ), DIVIDE ( normal_week, five_groups ) - 1 )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 3 Overview
+		lineageTag: c75270cb-1b1c-5f70-b1e8-f9028124414f
+
+	/// The whole country's spending growth, whatever city is in view.
+	measure 'National growth %' = CALCULATE ( [Spending growth %], REMOVEFILTERS ( dim_city ) )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 4 Cities
+		lineageTag: b0654138-4ede-5eaf-84b1-fed09c717bf6
+
+	/// This city's part of the whole country's spending.
+	measure 'Share of national %' = DIVIDE ( [Spent bn SAR], CALCULATE ( [Spent bn SAR], REMOVEFILTERS ( dim_city ) ) )
+		formatString: 0.0%
+		displayFolder: 4 Cities
+		lineageTag: 1f332e70-c351-5d89-80f6-f12f7878c266
+
+	/// The whole country's average payment, whatever city is in view.
+	measure 'National average payment SAR' = CALCULATE ( [Average payment SAR], REMOVEFILTERS ( dim_city ) )
+		formatString: #,0.0
+		displayFolder: 4 Cities
+		lineageTag: 91759e31-3e07-58aa-9d69-2dc214c45329
+
+	/// 1 for the sector with the biggest spending growth and the one with the biggest fall; the side chart shows only these two.
+	measure 'Rise or fall flag' =
+			VAR this_growth = [Spending growth %]
+			VAR every_sector = ADDCOLUMNS ( ALL ( dim_sector[sector] ), "@growth", [Spending growth %] )
+			VAR highest = MAXX ( every_sector, [@growth] )
+			VAR lowest = MINX ( every_sector, [@growth] )
+			RETURN
+			    IF ( NOT ISBLANK ( this_growth ) && ( this_growth = highest || this_growth = lowest ), 1 )
+		formatString: 0
+		displayFolder: 5 Sectors
+		lineageTag: 94b05638-b563-5c3b-91cd-873630027ce2
+
+	/// The last full week of Ramadan against the average of the 8 weeks before it, averaged over the Ramadans of 2021 to 2025.
+	measure 'Ramadan last week lift %' =
+			AVERAGEX (
+			    FILTER ( ALL ( dim_date[ramadan_year] ), NOT ISBLANK ( dim_date[ramadan_year] ) ),
+			    VAR weeks_before = CALCULATE ( [Average week bn SAR], dim_date[ramadan_phase] = "8 weeks before" )
+			    VAR last_full_week = CALCULATE ( [Spent bn SAR], dim_date[ramadan_phase] = "Last full week" )
+			    RETURN
+			        IF ( NOT ISBLANK ( last_full_week ), DIVIDE ( last_full_week, weeks_before ) - 1 )
+			)
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 6 Ramadan
+		lineageTag: d43e9eef-b84d-5fad-b0f2-487bb9a1b984
+
+	/// The cities or sectors the Overview is set to, always by name: up to five names ('Dammam, Khobar and Riyadh'), or, when most are picked, the ones left out ('all cities except Jeddah and Riyadh'). With 11 cities one of the two lists always has five names or fewer. Empty for the whole country.
+	measure 'Focus name' =
+			VAR cities_picked = VALUES ( dim_city[city] )
+			VAR cities_left = EXCEPT ( ALL ( dim_city[city] ), cities_picked )
+			VAR sectors_picked = VALUES ( dim_sector[sector] )
+			VAR sectors_left = EXCEPT ( ALL ( dim_sector[sector] ), sectors_picked )
+			VAR picked_city_last = CONCATENATEX ( TOPN ( 1, cities_picked, dim_city[city], DESC ), dim_city[city] )
+			VAR picked_city_list =
+			    CONCATENATEX ( FILTER ( cities_picked, dim_city[city] <> picked_city_last ), dim_city[city], ", ", dim_city[city], ASC )
+			        & IF ( COUNTROWS ( cities_picked ) > 1, " and " ) & picked_city_last
+			VAR left_city_last = CONCATENATEX ( TOPN ( 1, cities_left, dim_city[city], DESC ), dim_city[city] )
+			VAR left_city_list =
+			    CONCATENATEX ( FILTER ( cities_left, dim_city[city] <> left_city_last ), dim_city[city], ", ", dim_city[city], ASC )
+			        & IF ( COUNTROWS ( cities_left ) > 1, " and " ) & left_city_last
+			VAR picked_sector_last = CONCATENATEX ( TOPN ( 1, sectors_picked, dim_sector[sector], DESC ), dim_sector[sector] )
+			VAR picked_sector_list =
+			    CONCATENATEX ( FILTER ( sectors_picked, dim_sector[sector] <> picked_sector_last ), dim_sector[sector], ", ", dim_sector[sector], ASC )
+			        & IF ( COUNTROWS ( sectors_picked ) > 1, " and " ) & picked_sector_last
+			VAR left_sector_last = CONCATENATEX ( TOPN ( 1, sectors_left, dim_sector[sector], DESC ), dim_sector[sector] )
+			VAR left_sector_list =
+			    CONCATENATEX ( FILTER ( sectors_left, dim_sector[sector] <> left_sector_last ), dim_sector[sector], ", ", dim_sector[sector], ASC )
+			        & IF ( COUNTROWS ( sectors_left ) > 1, " and " ) & left_sector_last
+			VAR city_text =
+			    SWITCH (
+			        TRUE (),
+			        COUNTROWS ( cities_left ) = 0, "all " & COUNTROWS ( cities_picked ) & " cities",
+			        COUNTROWS ( cities_left ) < COUNTROWS ( cities_picked ), "all cities except " & left_city_list,
+			        picked_city_list
+			    )
+			VAR sector_text =
+			    SWITCH (
+			        TRUE (),
+			        COUNTROWS ( sectors_left ) = 0, "all " & COUNTROWS ( sectors_picked ) & " sectors",
+			        COUNTROWS ( sectors_left ) < COUNTROWS ( sectors_picked ), "all sectors except " & left_sector_list,
+			        picked_sector_list
+			    )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ), "",
+			        ISFILTERED ( dim_city[city] ), city_text,
+			        ISFILTERED ( dim_sector[sector] ), sector_text,
+			        ""
+			    )
+		displayFolder: 7 Text
+		lineageTag: 317ba4a8-d6a3-5143-99e8-3d0238067f66
+
+	/// The Overview's title: this year's growth against last year's.
+	measure 'Title Overview' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR both_picked = ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] )
+			VAR names = [Focus name]
+			-- the title line holds about 100 characters (the longest title with 36 characters of names is 99): longer lists show the count here, and the weekly chart subtitle names them
+			VAR place =
+			    IF (
+			        LEN ( names ) <= 36,
+			        names,
+			        IF (
+			            ISFILTERED ( dim_city[city] ),
+			            COUNTROWS ( VALUES ( dim_city[city] ) ) & " cities",
+			            COUNTROWS ( VALUES ( dim_sector[sector] ) ) & " sectors"
+			        )
+			    )
+			VAR what =
+			    SWITCH (
+			        TRUE (),
+			        ISFILTERED ( dim_city[city] ), "spending in " & place,
+			        ISFILTERED ( dim_sector[sector] ), "spending on " & LOWER ( place ),
+			        "spending"
+			    )
+			VAR growth = [Spending growth %]
+			VAR growth_year_before = CALCULATE ( [Spending growth %], REMOVEFILTERS ( dim_date ), dim_date[year] = y - 1 )
+			-- The comparison with the year before, worded for each case: two rises ("slower than 2024's 8.8%"),
+			-- two falls ("a bigger fall than 2024's 33.0%"), or a turn ("after falling 3.1% in 2024").
+			VAR before_text = FORMAT ( ABS ( growth_year_before ), "0.0%" )
+			VAR comparison =
+			    IF (
+			        y - 1 >= 2022 && NOT ISBLANK ( growth_year_before ),
+			        ", "
+			            & SWITCH (
+			                TRUE (),
+			                growth >= 0 && growth_year_before >= 0,
+			                    IF ( growth < growth_year_before, "slower than", IF ( growth > growth_year_before, "faster than", "the same as" ) )
+			                        & " " & ( y - 1 ) & "'s " & before_text,
+			                growth < 0 && growth_year_before < 0,
+			                    IF ( growth < growth_year_before, "a bigger fall than", IF ( growth > growth_year_before, "a smaller fall than", "the same fall as" ) )
+			                        & " " & ( y - 1 ) & "'s " & before_text,
+			                growth < 0, "after growing " & before_text & " in " & ( y - 1 ),
+			                "after falling " & before_text & " in " & ( y - 1 )
+			            )
+			    )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        both_picked, "Pick cities or sectors, not both: the source has no sector numbers inside a city",
+			        ISBLANK ( y ), "Pick a year",
+			        "In " & y & ", " & what & IF ( growth >= 0, " grew ", " fell " ) & FORMAT ( ABS ( growth ), "0.0%" ) & comparison
+			    )
+		displayFolder: 7 Text
+		lineageTag: d0fd1c92-80a2-57a6-9ecd-a9d5eea0b718
+
+	/// Under the Spent card: how many weeks, from when to when.
+	measure 'Note spent' =
+			VAR first_day = MIN ( dim_date[week_start] )
+			VAR last_day = MAX ( dim_date[week_start] ) + 6
+			RETURN
+			    IF (
+			        NOT ISBLANK ( [Spent bn SAR] ),
+			        [Weeks] & IF ( [Weeks] = 1, " week, ", " weeks, " )
+			            & FORMAT ( first_day, "d mmm" )
+			            & IF ( YEAR ( first_day ) <> YEAR ( last_day ), " " & YEAR ( first_day ) )
+			            & " to " & FORMAT ( last_day, "d mmm yyyy" )
+			    )
+		displayFolder: 7 Text
+		lineageTag: 80f19fb5-0128-518b-84fb-7b4af071dfea
+
+	/// Under the growth card: the amount it is compared with.
+	measure 'Note growth' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR year_before = [Spent year before bn]
+			RETURN
+			    IF ( NOT ISBLANK ( year_before ), "From " & FORMAT ( year_before, "#,0.00" ) & " bn SAR in " & ( y - 1 ) )
+		displayFolder: 7 Text
+		lineageTag: 17ca86d7-68ee-5184-9db6-e6c7da08563e
+
+	/// Under the average payment card: its change and last year's value.
+	measure 'Note average payment' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR change = [Average payment change %]
+			RETURN
+			    IF (
+			        NOT ISBLANK ( change ),
+			        FORMAT ( change, "+0.0%;−0.0%;0.0%" ) & ", from " & FORMAT ( [Average payment year before SAR], "0.0" )
+			            & " SAR in " & ( y - 1 )
+			    )
+		displayFolder: 7 Text
+		lineageTag: 6e860266-5b33-507e-982e-4e025fbc5421
+
+	/// Under the biggest week card: its date and what kind of week it was.
+	measure 'Note biggest week' =
+			VAR biggest = [Biggest week bn]
+			VAR biggest_week = MAXX ( FILTER ( VALUES ( dim_date[week_start] ), [Spent bn SAR] = biggest ), dim_date[week_start] )
+			VAR phase = CALCULATE ( SELECTEDVALUE ( dim_date[phase] ), dim_date[week_start] = biggest_week )
+			RETURN
+			    IF ( NOT ISBLANK ( biggest_week ), FORMAT ( biggest_week, "d mmm" ) & IF ( NOT ISBLANK ( phase ), ", " & phase ) )
+		displayFolder: 7 Text
+		lineageTag: 05402bde-bce2-5c10-ad96-9c4539b91139
+
+	/// The Cities page's title: how many cities grew faster than the country.
+	measure 'Title Cities' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR national = CALCULATE ( [Spending growth %], REMOVEFILTERS ( dim_city ) )
+			VAR every_city = ADDCOLUMNS ( ALL ( dim_city[city] ), "@growth", [Spending growth %] )
+			VAR faster = COUNTROWS ( FILTER ( every_city, [@growth] > national ) ) + 0
+			RETURN
+			    IF (
+			        ISBLANK ( y ) || ISBLANK ( national ),
+			        "Pick a year",
+			        "In " & y & ", " & faster & " of " & COUNTROWS ( every_city ) & " cities grew faster than the national "
+			            & FORMAT ( national, "0.0%;−0.0%" )
+			    )
+		displayFolder: 7 Text
+		lineageTag: 337199f8-b671-50c5-a09b-9178d31c25f4
+
+	measure 'Subtitle city growth' = "On the same weeks a year before" & IF ( NOT ISBLANK ( [National growth %] ), ". National " & FORMAT ( [National growth %], "+0.0%;−0.0%;0.0%" ) )
+		displayFolder: 7 Text
+		lineageTag: c2459c91-6c6e-5bbd-9379-ba1424302b48
+
+	measure 'Subtitle city share' = "Of all card spending in " & IF ( HASONEVALUE ( dim_date[year] ), SELECTEDVALUE ( dim_date[year] ), "all years" )
+		displayFolder: 7 Text
+		lineageTag: 08c83aa0-4345-51f9-8b3b-ff7f9265e436
+
+	measure 'Subtitle city payment' = "SAR per payment. National " & FORMAT ( [National average payment SAR], "0.0" ) & " SAR"
+		displayFolder: 7 Text
+		lineageTag: 93939795-9821-5b10-b4cb-f700336aa557
+
+	/// The Sectors page's title: in how many sectors the average payment got smaller.
+	measure 'Title Sectors' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR every_sector = ADDCOLUMNS ( ALL ( dim_sector[sector] ), "@change", [Average payment change %] )
+			VAR counted = COUNTROWS ( FILTER ( every_sector, NOT ISBLANK ( [@change] ) ) ) + 0
+			VAR smaller = COUNTROWS ( FILTER ( every_sector, [@change] < 0 ) ) + 0
+			RETURN
+			    IF (
+			        ISBLANK ( y ) || counted = 0,
+			        "Pick a year",
+			        "In " & y & ", the average payment got "
+			            & IF ( smaller * 2 >= counted, "smaller in " & smaller, "bigger in " & ( counted - smaller ) )
+			            & " of " & counted & " sectors"
+			    )
+		displayFolder: 7 Text
+		lineageTag: 96abc5e4-d834-51ac-80fe-d35db5d735e7
+
+	/// The side card's sentence: why the biggest rise rose and the biggest fall fell.
+	measure 'Sectors sentence' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR every_sector =
+			    ADDCOLUMNS (
+			        ALL ( dim_sector[sector] ),
+			        "@growth", [Spending growth %],
+			        "@payments", [Payments growth %],
+			        "@size", [Average payment change %]
+			    )
+			VAR rise = TOPN ( 1, every_sector, [@growth], DESC )
+			VAR fall = TOPN ( 1, every_sector, [@growth], ASC )
+			VAR rise_growth = MAXX ( rise, [@growth] )
+			VAR rise_payments = MAXX ( rise, [@payments] )
+			VAR rise_size = MAXX ( rise, [@size] )
+			VAR fall_growth = MAXX ( fall, [@growth] )
+			VAR fall_payments = MAXX ( fall, [@payments] )
+			VAR fall_size = MAXX ( fall, [@size] )
+			VAR rise_reason =
+			    IF ( rise_growth >= 0,
+			        IF ( rise_size > rise_payments, "rose mostly on bigger payments", "rose mostly on more payments" ),
+			        IF ( rise_payments < rise_size, "fell mostly on fewer payments", "fell mostly on smaller payments" ) )
+			VAR fall_reason =
+			    IF ( fall_growth >= 0,
+			        IF ( fall_size > fall_payments, "rose mostly on bigger payments", "rose mostly on more payments" ),
+			        IF ( fall_payments < fall_size, "fell mostly on fewer payments", "fell mostly on smaller payments" ) )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( y ) && NOT ISBLANK ( rise_growth ),
+			        "In " & y & ", "
+			            & LOWER ( CONCATENATEX ( rise, dim_sector[sector], ", " ) ) & " " & rise_reason & ", and "
+			            & LOWER ( CONCATENATEX ( fall, dim_sector[sector], ", " ) ) & " " & fall_reason & "."
+			    )
+		displayFolder: 7 Text
+		lineageTag: 469e7a91-b5e5-5bf9-97a8-876231afb915
+
+	/// Khobar and Dammam dark, the other cities light grey.
+	measure 'Colour city' = IF ( SELECTEDVALUE ( dim_city[city] ) IN { "Khobar", "Dammam" }, "#13161B", "#C9D1DA" )
+		displayFolder: 8 Colours
+		lineageTag: 81efd694-73ce-5de7-ab11-8b3b93d23208
+
+	/// The weeks starting from the 21st (around payday) dark.
+	measure 'Colour payday' = IF ( SELECTEDVALUE ( dim_date[month_days_order] ) >= 4, "#13161B", "#C9D1DA" )
+		displayFolder: 8 Colours
+		lineageTag: 940e7eff-3c00-514c-9656-c6398cd2e4ed
+
+	measure 'Colour Ramadan lift' = IF ( [Ramadan last week lift %] >= 0, "#3A4350", "#B42318" )
+		displayFolder: 8 Colours
+		lineageTag: b9f19075-cce4-5378-a399-cf86d745cb3f
+
+	measure 'Colour spending growth' = IF ( [Spending growth %] < 0, "#B42318", "#13161B" )
+		displayFolder: 8 Colours
+		lineageTag: 1142d17f-3d2c-5d60-a9fa-e187b71db2d9
+
+	measure 'Colour payments growth' = IF ( [Payments growth %] < 0, "#B42318", "#13161B" )
+		displayFolder: 8 Colours
+		lineageTag: f2bb9404-95c4-5dbc-b93b-3388cfa838b9
+
+	measure 'Colour average payment change' = IF ( [Average payment change %] < 0, "#B42318", "#13161B" )
+		displayFolder: 8 Colours
+		lineageTag: 21b22b5b-2670-5d04-912f-e4cfe9f3305f
+
+	/// Under the weekly chart's title: the place and the year in view.
+	measure 'Subtitle weekly chart' =
+			VAR names = [Focus name]
+			-- a capital first letter: 'all cities except Riyadh' starts the line here
+			VAR place = UPPER ( LEFT ( names, 1 ) ) & MID ( names, 2, LEN ( names ) )
+			RETURN
+			    IF (
+			        ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ),
+			        "Pick cities or sectors, not both",
+			        IF ( names <> "", place & ", " )
+			            & IF ( HASONEVALUE ( dim_date[year] ), SELECTEDVALUE ( dim_date[year] ) & ", ", "all years, " ) & "billion SAR"
+			    )
+		displayFolder: 7 Text
+		lineageTag: 6f0092bd-1219-5ee5-8afb-6f19ef40dfa5
+
+	/// Shown only for the year's biggest week and the Eid al-Fitr week, so the weekly chart writes the value over just those two bars.
+	measure 'Weekly chart label bn' =
+			VAR this_week = [Spent bn SAR]
+			VAR biggest = CALCULATE ( [Biggest week bn], REMOVEFILTERS ( dim_date[week_start] ) )
+			VAR is_eid_al_fitr = SELECTEDVALUE ( dim_date[eid] ) = "Eid al-Fitr"
+			RETURN
+			    IF ( this_week = biggest || is_eid_al_fitr, this_week )
+		formatString: #,0.00
+		displayFolder: 3 Overview
+		lineageTag: bf909c12-a847-5724-a0a1-c0e5b56578ad
+
+	/// The top of the weekly chart's value axis: 18% above its highest bar or dashed-line point, whatever the filters. Without this room, the label over the biggest week had no space above the bar and was drawn inside it.
+	measure 'Weekly axis max' =
+			VAR highest =
+			    MAXX ( VALUES ( dim_date[week_start] ), MAX ( [Spent bn SAR], [Spent year before bn] ) )
+			RETURN
+			    highest * 1.18
+		formatString: #,0.00
+		displayFolder: 3 Overview
+		lineageTag: a4a01a5d-cbd0-5061-bb1f-8d6d4ab16ad2
+
+	partition Measures_ = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+

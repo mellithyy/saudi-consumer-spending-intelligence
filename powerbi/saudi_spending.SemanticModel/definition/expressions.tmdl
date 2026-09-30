@@ -1,0 +1,5 @@
+expression DataFolder = "D:\Career\projects\P1-saudi-spending\saudi-consumer-spending-intelligence\data\powerbi\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: fc949b95-bacf-4ea4-8aeb-cbffdf852d7a
+
+	annotation PBI_ResultType = Text
+

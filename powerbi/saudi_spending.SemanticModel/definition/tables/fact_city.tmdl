@@ -1,0 +1,62 @@
+table fact_city
+	lineageTag: 0b838d8a-e173-4b81-a66d-abf2d4aa6b74
+
+	measure 'City bn SAR' = DIVIDE ( SUM ( fact_city[value_k_sar] ), 1000000 )
+		lineageTag: 5e2632fe-7470-40b6-9dbe-b27fb601d389
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0661e4f1-5c14-46f3-bd6a-6ce741c29bca
+		summarizeBy: none
+		sourceColumn: date_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column city_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a02de91f-ebaf-41b7-882e-2a90560903e3
+		summarizeBy: none
+		sourceColumn: city_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column transactions_k
+		dataType: int64
+		formatString: 0
+		lineageTag: 123b7243-3e6e-4e75-a006-efa6e1e161af
+		summarizeBy: sum
+		sourceColumn: transactions_k
+
+		annotation SummarizationSetBy = Automatic
+
+	column value_k_sar
+		dataType: int64
+		formatString: 0
+		lineageTag: 3e224f0a-87d7-4f78-b4e2-28c1beaf0f4b
+		summarizeBy: sum
+		sourceColumn: value_k_sar
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_city = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document(File.Contents(DataFolder & "fact_city.parquet"), [Compression=null, LegacyColumnNameEncoding=false, MaxDepth=null])
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

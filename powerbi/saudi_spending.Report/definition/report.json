@@ -1,0 +1,167 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
+  "themeCollection": {
+    "baseTheme": {
+      "name": "Fluent2-CY26SU08",
+      "reportVersionAtImport": {
+        "visual": "2.12.0",
+        "report": "3.4.0",
+        "page": "2.3.1"
+      },
+      "type": "SharedResources"
+    },
+    "customTheme": {
+      "name": "Saudi_card_spending4658050945170654.json",
+      "reportVersionAtImport": {
+        "visual": "2.12.0",
+        "report": "3.4.0",
+        "page": "2.3.1"
+      },
+      "type": "RegisteredResources"
+    }
+  },
+  "objects": {
+    "section": [
+      {
+        "properties": {
+          "verticalAlignment": {
+            "expr": {
+              "Literal": {
+                "Value": "'Top'"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspacePane": [
+      {
+        "properties": {
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "false"
+              }
+            }
+          },
+          "visible": {
+            "expr": {
+              "Literal": {
+                "Value": "false"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [
+        {
+          "name": "Fluent2-CY26SU08",
+          "path": "BaseThemes/Fluent2-CY26SU08.json",
+          "type": "BaseTheme"
+        }
+      ]
+    },
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "bg_1_overview.png",
+          "path": "bg_1_overview.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_2_cities.png",
+          "path": "bg_2_cities.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_3_sectors.png",
+          "path": "bg_3_sectors.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_4_ramadan.png",
+          "path": "bg_4_ramadan.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_5_about.png",
+          "path": "bg_5_about.png",
+          "type": "Image"
+        },
+        {
+          "name": "Saudi_card_spending4658050945170654.json",
+          "path": "Saudi_card_spending4658050945170654.json",
+          "type": "CustomTheme"
+        },
+        {
+          "name": "rail_overview_on.png",
+          "path": "rail_overview_on.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_overview_off.png",
+          "path": "rail_overview_off.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_cities_on.png",
+          "path": "rail_cities_on.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_cities_off.png",
+          "path": "rail_cities_off.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_sectors_on.png",
+          "path": "rail_sectors_on.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_sectors_off.png",
+          "path": "rail_sectors_off.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_ramadan_on.png",
+          "path": "rail_ramadan_on.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_ramadan_off.png",
+          "path": "rail_ramadan_off.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_about_on.png",
+          "path": "rail_about_on.png",
+          "type": "Image"
+        },
+        {
+          "name": "rail_about_off.png",
+          "path": "rail_about_off.png",
+          "type": "Image"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "useStylableVisualContainerHeader": true,
+    "exportDataMode": "AllowSummarized",
+    "defaultDrillFilterOtherVisuals": true,
+    "allowChangeFilterTypes": true,
+    "useEnhancedTooltips": true,
+    "useDefaultAggregateDisplayName": true,
+    "customMemoryLimit": "1048576",
+    "customTimeoutLimit": "225"
+  }
+}
