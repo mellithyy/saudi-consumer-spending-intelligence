@@ -174,13 +174,21 @@ as the dashboard: one printable page (landscape A4) for a manager who works in E
 
 ![The Excel report, 2025](reports/figures/excel_report.png)
 
-- One input cell: pick a year from 2022 to 2025, and every number, both tables and the chart follow it.
+- It looks like the dashboard: the same slate band with the title and the Year box, white cards on a light grey
+  page, four headline cards with a small weekly line each, and every change in green with ▲ or red with ▼ against
+  the same weeks a year before.
+- One input cell: pick a year from 2022 to 2025 in the Year box, and every number, both tables and the charts
+  follow it.
 - Every figure is a formula (SUMIFS, MAXIFS, AVERAGEIFS, INDEX/MATCH, LARGE) on a Calc sheet, over a Data sheet
-  of 7,830 rows, so each number can be traced back to the data. Cities are ranked by growth and sectors by size
-  with LARGE and INDEX/MATCH.
-- The chart colours each week by type (one column series per type), and its ranges are named ranges that stop
-  at the year's last week, so 2025 shows 27 weeks and 2023 shows 53.
-- The figures match the dashboard's, for example 2025: 361.97 billion SAR, +6.4% on the same weeks of 2024.
+  of 7,830 rows, so each number can be traced back to the data. Cities (with the National row among them) are
+  ranked by growth and sectors by size with LARGE and INDEX/MATCH.
+- The weekly chart colours each week by type (one column series per type) and writes the value of the biggest week
+  over its column. Its ranges, like those of the cards' lines, are named ranges that stop at the year's last
+  week, so 2025 shows 27 weeks and 2023 shows 53.
+- The figures match the dashboard's, for example 2025: 361.97 billion SAR, +6.4% on the same weeks of 2024. Every
+  Report figure was recalculated outside Excel for each year and compared with SQL (1,504 cells, no difference).
+- The first version is kept as the Git tag
+  [`excel-v1`](https://github.com/mellithyy/saudi-consumer-spending-intelligence/tree/excel-v1).
 
 ## Plan
 1. Extract: download the data from the API, with checks ✅
