@@ -3,9 +3,9 @@
   "name": "d3c85a38eab02a25f9c7",
   "position": {
     "x": 488,
-    "y": 128,
+    "y": 144,
     "z": 20000,
-    "height": 552,
+    "height": 536,
     "width": 368,
     "tabOrder": 20000
   },
@@ -48,7 +48,86 @@
               },
               "queryRef": "Measures_.Ramadan last week lift %",
               "nativeQueryRef": "Ramadan last week lift %",
-              "displayName": "Last full week against the 8 weeks before"
+              "displayName": "Average of 2021 to 2025"
+            }
+          ]
+        },
+        "Tooltips": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Ramadan 2021 lift %"
+                }
+              },
+              "queryRef": "Measures_.Ramadan 2021 lift %",
+              "nativeQueryRef": "Ramadan 2021 lift %",
+              "displayName": "Ramadan 2021"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Ramadan 2022 lift %"
+                }
+              },
+              "queryRef": "Measures_.Ramadan 2022 lift %",
+              "nativeQueryRef": "Ramadan 2022 lift %",
+              "displayName": "Ramadan 2022"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Ramadan 2023 lift %"
+                }
+              },
+              "queryRef": "Measures_.Ramadan 2023 lift %",
+              "nativeQueryRef": "Ramadan 2023 lift %",
+              "displayName": "Ramadan 2023"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Ramadan 2024 lift %"
+                }
+              },
+              "queryRef": "Measures_.Ramadan 2024 lift %",
+              "nativeQueryRef": "Ramadan 2024 lift %",
+              "displayName": "Ramadan 2024"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Ramadan 2025 lift %"
+                }
+              },
+              "queryRef": "Measures_.Ramadan 2025 lift %",
+              "nativeQueryRef": "Ramadan 2025 lift %",
+              "displayName": "Ramadan 2025"
             }
           ]
         }
@@ -111,7 +190,7 @@
             "innerPadding": {
               "expr": {
                 "Literal": {
-                  "Value": "30L"
+                  "Value": "40L"
                 }
               }
             }

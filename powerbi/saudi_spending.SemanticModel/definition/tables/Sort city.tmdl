@@ -1,0 +1,27 @@
+table 'Sort city'
+	lineageTag: e214b7ea-f404-5d37-a3dd-eac547e90c10
+
+	column Sort
+		dataType: string
+		lineageTag: 675a0657-f894-542f-9a93-15cca6d7cbe7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Sort]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		dataType: int64
+		isHidden
+		lineageTag: f23b4a64-3a32-5fa0-be91-61257317c1ef
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Order]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Sort city' = calculated
+		mode: import
+		source = DATATABLE ( "Sort", STRING, "Order", INTEGER, { { "Growth", 1 }, { "Share", 2 }, { "Avg. payment", 3 } } )
+

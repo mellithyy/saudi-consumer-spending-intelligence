@@ -229,7 +229,9 @@ table Measures_
 	/// Shown only for the year's biggest week and the Eid al-Fitr week, so the weekly chart writes the value over just those two bars.
 	measure 'Weekly chart label bn' =
 			VAR this_week = [Spent bn SAR]
-			VAR biggest = CALCULATE ( [Biggest week bn], REMOVEFILTERS ( dim_date[week_start] ) )
+			-- every date filter but the year: the weekly chart (Deneb) groups its rows by week type and its hidden sort column,
+			-- and with those filters left each week type had its own biggest week
+			VAR biggest = CALCULATE ( [Biggest week bn], ALLEXCEPT ( dim_date, dim_date[year] ) )
 			VAR is_eid_al_fitr = SELECTEDVALUE ( dim_date[eid] ) = "Eid al-Fitr"
 			RETURN
 			    IF ( this_week = biggest || is_eid_al_fitr, this_week )
@@ -237,7 +239,7 @@ table Measures_
 		displayFolder: 3 Overview
 		lineageTag: bf909c12-a847-5724-a0a1-c0e5b56578ad
 
-	/// The top of the weekly chart's value axis: 18% above its highest bar or dashed-line point, whatever the filters. Without this room, the label over the biggest week had no space above the bar and was drawn inside it.
+	/// The top of the weekly chart's value axis: 18% above its highest bar or dashed-line point, whatever the filters. Without this room, the label over the biggest week had no space above the bar and was drawn inside it. (25% in review round 1, while the legend shared the strip with 'Ramadan'; since round 5 the strip holds only 'Ramadan' and the layout check finds no label touching it from 15% up, for every year, city and sector.)
 	measure 'Weekly axis max' =
 			VAR highest =
 			    MAXX ( VALUES ( dim_date[week_start] ), MAX ( [Spent bn SAR], [Spent year before bn] ) )
@@ -247,20 +249,60 @@ table Measures_
 		displayFolder: 3 Overview
 		lineageTag: a4a01a5d-cbd0-5061-bb1f-8d6d4ab16ad2
 
+	/// The month and year on the first week of each month ('Feb 2025'), empty on the other weeks: the weekly chart writes it under that week.
+	measure 'Month label' =
+			VAR week_start = SELECTEDVALUE ( dim_date[week_start] )
+			RETURN
+			    IF ( NOT ISBLANK ( week_start ) && DAY ( week_start ) <= 7, FORMAT ( week_start, "mmm yyyy" ) )
+		displayFolder: 3 Overview
+		lineageTag: 2e63bd8b-764b-571c-9ec8-ec3b9dfb230e
+
+	/// The week from Sunday to Saturday as text ('23 to 29 Mar 2025'), for the weekly chart's tooltip.
+	measure 'Week label' =
+			VAR first_day = SELECTEDVALUE ( dim_date[week_start] )
+			VAR last_day = first_day + 6
+			RETURN
+			    IF (
+			        NOT ISBLANK ( first_day ),
+			        FORMAT ( first_day, IF ( MONTH ( first_day ) = MONTH ( last_day ), "d", IF ( YEAR ( first_day ) = YEAR ( last_day ), "d mmm", "d mmm yyyy" ) ) )
+			            & " to " & FORMAT ( last_day, "d mmm yyyy" )
+			    )
+		displayFolder: 3 Overview
+		lineageTag: e8f9d7dc-817a-52cd-9af1-cb68e1dfd2ac
+
 	/// The average normal week (no Ramadan day, no Eid) of 2021 to 2025 in this group of month days, against the average of the five groups. It ignores the Year filter on purpose: one year has too few normal weeks in each group.
 	measure 'Payday index %' =
-			VAR normal_week =
-			    CALCULATE ( [Average week bn SAR], dim_date[week_type] = "Normal", dim_date[year] >= 2021 )
-			VAR five_groups =
-			    AVERAGEX (
-			        ALL ( dim_date[month_days], dim_date[month_days_order] ),
-			        CALCULATE ( [Average week bn SAR], dim_date[week_type] = "Normal", dim_date[year] >= 2021 )
-			    )
+			VAR normal_week = [Payday average week bn]
+			VAR five_groups = [Payday all groups bn]
 			RETURN
 			    IF ( NOT ISBLANK ( normal_week ), DIVIDE ( normal_week, five_groups ) - 1 )
 		formatString: +0.0%;−0.0%;0.0%
 		displayFolder: 3 Overview
 		lineageTag: c75270cb-1b1c-5f70-b1e8-f9028124414f
+
+	/// The average normal week (no Ramadan day, no Eid) of 2021 to 2025 in this group of month days, billion SAR.
+	measure 'Payday average week bn' =
+			CALCULATE ( [Average week bn SAR], dim_date[week_type] = "Normal", dim_date[year] >= 2021 )
+		formatString: #,0.00
+		displayFolder: 3 Overview
+		lineageTag: 2c092638-173f-5ca4-b967-91526079523b
+
+	/// The average of the five groups' average normal weeks, billion SAR: what the payday index compares each group with.
+	measure 'Payday all groups bn' =
+			AVERAGEX (
+			    ALL ( dim_date[month_days], dim_date[month_days_order] ),
+			    CALCULATE ( [Average week bn SAR], dim_date[week_type] = "Normal", dim_date[year] >= 2021 )
+			)
+		formatString: #,0.00
+		displayFolder: 3 Overview
+		lineageTag: acf2811c-bd5a-56f7-adad-1710bf9fca78
+
+	/// How many normal weeks of 2021 to 2025 start in this group of month days.
+	measure 'Payday normal weeks' =
+			CALCULATE ( [Weeks], dim_date[week_type] = "Normal", dim_date[year] >= 2021 )
+		formatString: 0
+		displayFolder: 3 Overview
+		lineageTag: 6dc6b8fe-a962-5b53-a56c-bf7cd253c63c
 
 	/// The whole country's spending growth, whatever city is in view.
 	measure 'National growth %' =
@@ -292,17 +334,30 @@ table Measures_
 		displayFolder: 4 Cities
 		lineageTag: 974176c0-795b-598d-b14f-6c4a01e685f3
 
-	/// 1 for the sector with the biggest spending growth and the one with the biggest fall; the side chart shows only these two.
-	measure 'Rise or fall flag' =
-			VAR this_growth = [Spending growth %]
-			VAR every_sector = ADDCOLUMNS ( ALL ( dim_sector[sector] ), "@growth", [Spending growth %] )
-			VAR highest = MAXX ( every_sector, [@growth] )
-			VAR lowest = MINX ( every_sector, [@growth] )
+	/// What the Cities scorecard is sorted by, as the 'Sort by' buttons say: growth (default), share or average payment.
+	measure 'City sort value' =
+			VAR pick = SELECTEDVALUE ( 'Sort city'[Sort], "Growth" )
 			RETURN
-			    IF ( NOT ISBLANK ( this_growth ) && ( this_growth = highest || this_growth = lowest ), 1 )
-		formatString: 0
+			    SWITCH ( pick, "Share", [Share of national %], "Avg. payment", [Average payment SAR], [Spending growth %] )
+		formatString: 0.0000
+		displayFolder: 4 Cities
+		lineageTag: 81e16b62-2b70-5058-a3ba-13447aead89e
+
+	/// What the Sectors table is sorted by, as the 'Sort by' buttons say: the change in the average payment (default), spent or spending growth.
+	measure 'Sector sort value' =
+			VAR pick = SELECTEDVALUE ( 'Sort sector'[Sort], "Avg. payment change" )
+			RETURN
+			    SWITCH ( pick, "Spent", [Spent bn SAR], "Spending growth", [Spending growth %], [Average payment change %] )
+		formatString: 0.0000
 		displayFolder: 5 Sectors
-		lineageTag: 94b05638-b563-5c3b-91cd-873630027ce2
+		lineageTag: 66bcc546-8bbd-5eae-8315-95bee10799c9
+
+	/// This sector's part of all card spending (the sectors add up to the country).
+	measure 'Share of spending %' =
+			DIVIDE ( [Spent bn SAR], CALCULATE ( [Spent bn SAR], REMOVEFILTERS ( dim_sector ) ) )
+		formatString: 0.0%
+		displayFolder: 5 Sectors
+		lineageTag: 19cb5592-5568-561f-a8a0-e970fc04779e
 
 	/// The whole country's Ramadan lift, whatever city is in view.
 	measure 'National Ramadan lift %' =
@@ -323,6 +378,56 @@ table Measures_
 		formatString: +0.0%;−0.0%;0.0%
 		displayFolder: 6 Ramadan
 		lineageTag: d43e9eef-b84d-5fad-b0f2-487bb9a1b984
+
+	/// The last full week of Ramadan 2021 against the average of the 8 weeks before it (one of the five years the lift averages).
+	measure 'Ramadan 2021 lift %' =
+			VAR weeks_before = CALCULATE ( [Average week bn SAR], dim_date[ramadan_year] = 2021, dim_date[ramadan_phase] = "8 weeks before" )
+			VAR last_full_week = CALCULATE ( [Spent bn SAR], dim_date[ramadan_year] = 2021, dim_date[ramadan_phase] = "Last full week" )
+			RETURN
+			    IF ( NOT ISBLANK ( last_full_week ), DIVIDE ( last_full_week, weeks_before ) - 1 )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 6 Ramadan
+		lineageTag: a799eec9-5018-5722-99f3-9bbe5fba41c4
+
+	/// The last full week of Ramadan 2022 against the average of the 8 weeks before it (one of the five years the lift averages).
+	measure 'Ramadan 2022 lift %' =
+			VAR weeks_before = CALCULATE ( [Average week bn SAR], dim_date[ramadan_year] = 2022, dim_date[ramadan_phase] = "8 weeks before" )
+			VAR last_full_week = CALCULATE ( [Spent bn SAR], dim_date[ramadan_year] = 2022, dim_date[ramadan_phase] = "Last full week" )
+			RETURN
+			    IF ( NOT ISBLANK ( last_full_week ), DIVIDE ( last_full_week, weeks_before ) - 1 )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 6 Ramadan
+		lineageTag: 5ae4b310-a34c-5cda-910b-7626352d891c
+
+	/// The last full week of Ramadan 2023 against the average of the 8 weeks before it (one of the five years the lift averages).
+	measure 'Ramadan 2023 lift %' =
+			VAR weeks_before = CALCULATE ( [Average week bn SAR], dim_date[ramadan_year] = 2023, dim_date[ramadan_phase] = "8 weeks before" )
+			VAR last_full_week = CALCULATE ( [Spent bn SAR], dim_date[ramadan_year] = 2023, dim_date[ramadan_phase] = "Last full week" )
+			RETURN
+			    IF ( NOT ISBLANK ( last_full_week ), DIVIDE ( last_full_week, weeks_before ) - 1 )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 6 Ramadan
+		lineageTag: 6a1cb574-7325-55f1-bad5-f34cb2d2f2f1
+
+	/// The last full week of Ramadan 2024 against the average of the 8 weeks before it (one of the five years the lift averages).
+	measure 'Ramadan 2024 lift %' =
+			VAR weeks_before = CALCULATE ( [Average week bn SAR], dim_date[ramadan_year] = 2024, dim_date[ramadan_phase] = "8 weeks before" )
+			VAR last_full_week = CALCULATE ( [Spent bn SAR], dim_date[ramadan_year] = 2024, dim_date[ramadan_phase] = "Last full week" )
+			RETURN
+			    IF ( NOT ISBLANK ( last_full_week ), DIVIDE ( last_full_week, weeks_before ) - 1 )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 6 Ramadan
+		lineageTag: a818de61-f0cf-5b10-ab97-f51d172bfdca
+
+	/// The last full week of Ramadan 2025 against the average of the 8 weeks before it (one of the five years the lift averages).
+	measure 'Ramadan 2025 lift %' =
+			VAR weeks_before = CALCULATE ( [Average week bn SAR], dim_date[ramadan_year] = 2025, dim_date[ramadan_phase] = "8 weeks before" )
+			VAR last_full_week = CALCULATE ( [Spent bn SAR], dim_date[ramadan_year] = 2025, dim_date[ramadan_phase] = "Last full week" )
+			RETURN
+			    IF ( NOT ISBLANK ( last_full_week ), DIVIDE ( last_full_week, weeks_before ) - 1 )
+		formatString: +0.0%;−0.0%;0.0%
+		displayFolder: 6 Ramadan
+		lineageTag: 2370ccbf-a5aa-5208-98d6-6e4d9985b184
 
 	/// The cities or sectors the Overview is set to, always by name: up to five names ('Dammam, Khobar and Riyadh'), or, when most are picked, the ones left out ('all cities except Jeddah and Riyadh'). With 11 cities one of the two lists always has five names or fewer. Empty for the whole country.
 	measure 'Focus name' =
@@ -435,10 +540,30 @@ table Measures_
 			        ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ),
 			        "Pick cities or sectors, not both",
 			        IF ( names <> "", place & ", " )
-			            & IF ( HASONEVALUE ( dim_date[year] ), SELECTEDVALUE ( dim_date[year] ) & ", ", "all years, " ) & "billion SAR"
+			            & IF ( HASONEVALUE ( dim_date[year] ), SELECTEDVALUE ( dim_date[year] ) & ", ", "all years, " ) & "bn SAR"
 			    )
 		displayFolder: 7 Text
 		lineageTag: 6f0092bd-1219-5ee5-8afb-6f19ef40dfa5
+
+	/// Under the 'Growth year by year' title: what the columns compare.
+	measure 'Subtitle growth chart' =
+			IF (
+			    ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ),
+			    "Pick cities or sectors, not both",
+			    "On the same weeks a year before"
+			)
+		displayFolder: 7 Text
+		lineageTag: 07c8604f-d1e8-5294-b843-91ca91e01afd
+
+	/// Under the 'Spending by week of the month' title: which weeks, against what.
+	measure 'Subtitle payday chart' =
+			IF (
+			    ISFILTERED ( dim_city[city] ) && ISFILTERED ( dim_sector[sector] ),
+			    "Pick cities or sectors, not both",
+			    "Normal weeks of 2021 to 2025, against the average week. Salaries are paid around the 27th."
+			)
+		displayFolder: 7 Text
+		lineageTag: c27a97a3-e455-57fc-86ee-25ec1e1a7121
 
 	/// Under the Spent card: how many weeks, from when to when.
 	measure 'Note spent' =
@@ -499,16 +624,6 @@ table Measures_
 		displayFolder: 7 Text
 		lineageTag: c2459c91-6c6e-5bbd-9379-ba1424302b48
 
-	measure 'Subtitle city share' =
-			"Of all card spending in " & IF ( HASONEVALUE ( dim_date[year] ), SELECTEDVALUE ( dim_date[year] ), "all years" )
-		displayFolder: 7 Text
-		lineageTag: 08c83aa0-4345-51f9-8b3b-ff7f9265e436
-
-	measure 'Subtitle city payment' =
-			"SAR per payment. Dark: above the national " & FORMAT ( [National average payment SAR], "0.0" )
-		displayFolder: 7 Text
-		lineageTag: 93939795-9821-5b10-b4cb-f700336aa557
-
 	measure 'Subtitle Ramadan city' =
 			"Same comparison. Dark: above the national " & FORMAT ( [National Ramadan lift %], "+0.0%;−0.0%;0.0%" )
 		displayFolder: 7 Text
@@ -531,47 +646,23 @@ table Measures_
 		displayFolder: 7 Text
 		lineageTag: 96abc5e4-d834-51ac-80fe-d35db5d735e7
 
-	/// The side card's sentence: why the biggest rise rose and the biggest fall fell.
+	/// Under the Sectors table: in how many sectors the payments rose and the average payment fell.
 	measure 'Sectors sentence' =
 			VAR y = SELECTEDVALUE ( dim_date[year] )
 			VAR every_sector =
-			    ADDCOLUMNS (
-			        ALL ( dim_sector[sector] ),
-			        "@growth", [Spending growth %],
-			        "@payments", [Payments growth %],
-			        "@size", [Average payment change %]
-			    )
-			VAR rise = TOPN ( 1, every_sector, [@growth], DESC )
-			VAR fall = TOPN ( 1, every_sector, [@growth], ASC )
-			VAR rise_growth = MAXX ( rise, [@growth] )
-			VAR rise_payments = MAXX ( rise, [@payments] )
-			VAR rise_size = MAXX ( rise, [@size] )
-			VAR fall_growth = MAXX ( fall, [@growth] )
-			VAR fall_payments = MAXX ( fall, [@payments] )
-			VAR fall_size = MAXX ( fall, [@size] )
-			VAR rise_reason =
-			    IF ( rise_growth >= 0,
-			        IF ( rise_size > rise_payments, "rose mostly on bigger payments", "rose mostly on more payments" ),
-			        IF ( rise_payments < rise_size, "fell mostly on fewer payments", "fell mostly on smaller payments" ) )
-			VAR fall_reason =
-			    IF ( fall_growth >= 0,
-			        IF ( fall_size > fall_payments, "rose mostly on bigger payments", "rose mostly on more payments" ),
-			        IF ( fall_payments < fall_size, "fell mostly on fewer payments", "fell mostly on smaller payments" ) )
+			    ADDCOLUMNS ( ALL ( dim_sector[sector] ), "@payments", [Payments growth %], "@size", [Average payment change %] )
+			VAR counted = COUNTROWS ( FILTER ( every_sector, NOT ISBLANK ( [@size] ) ) ) + 0
+			VAR more_payments = COUNTROWS ( FILTER ( every_sector, [@payments] > 0 ) ) + 0
+			VAR smaller = COUNTROWS ( FILTER ( every_sector, [@size] < 0 ) ) + 0
 			RETURN
 			    IF (
-			        NOT ISBLANK ( y ) && NOT ISBLANK ( rise_growth ),
-			        "In " & y & ", "
-			            & LOWER ( CONCATENATEX ( rise, dim_sector[sector], ", " ) ) & " " & rise_reason & ", and "
-			            & LOWER ( CONCATENATEX ( fall, dim_sector[sector], ", " ) ) & " " & fall_reason & "."
+			        NOT ISBLANK ( y ) && counted > 0,
+			        "Payments rose in " & more_payments & " of " & counted & " sectors while the average payment fell in " & smaller
+			            -- the reading holds only when both are most of the sectors
+			            & IF ( more_payments * 2 > counted && smaller * 2 > counted, ": more card payments, each one smaller.", "." )
 			    )
 		displayFolder: 7 Text
 		lineageTag: 469e7a91-b5e5-5bf9-97a8-876231afb915
-
-	/// Dark for a city whose average payment is above the national one, else light grey.
-	measure 'Colour city payment' =
-			IF ( [Average payment SAR] > [National average payment SAR], "#344054", "#D0D5DD" )
-		displayFolder: 8 Colours
-		lineageTag: 7eedaec1-eaff-5912-84d7-74f8b9c1ab90
 
 	/// Dark for a city whose Ramadan lift is above the national one, else light grey.
 	measure 'Colour city Ramadan' =
@@ -865,85 +956,459 @@ table Measures_
 		displayFolder: 9 HTML
 		lineageTag: ca8b6520-8922-5bcf-99a5-59bea5fe36dd
 
-	/// One row of the Sectors table; the largest sector's row also holds the header and the smallest one's the 'All sectors' total.
+	/// One row of the Sectors table; the first row in the current sort also holds the column headers, the last one the 'All sectors' total and the footer.
 	measure 'HTML sector row' =
 			VAR sector_spent = [Spent bn SAR]
 			VAR sector_growth = [Spending growth %]
 			VAR sector_payments = [Payments growth %]
 			VAR sector_average = [Average payment SAR]
 			VAR sector_change = [Average payment change %]
-			VAR in_view = ALLSELECTED ( dim_sector[sector] )
-			VAR largest = MAXX ( in_view, [Spent bn SAR] )
-			VAR smallest = MINX ( in_view, [Spent bn SAR] )
+			VAR every_sector = ADDCOLUMNS ( ALLSELECTED ( dim_sector[sector] ), "@change", [Average payment change %], "@key", [Sector sort value] )
+			VAR sort_now = [Sector sort value]
+			VAR position = COUNTROWS ( FILTER ( every_sector, [@key] > sort_now ) ) + 1
 			VAR total_0 = CALCULATE ( [Spent bn SAR], REMOVEFILTERS ( dim_sector ) )
 			VAR total_1 = CALCULATE ( [Spending growth %], REMOVEFILTERS ( dim_sector ) )
 			VAR total_2 = CALCULATE ( [Payments growth %], REMOVEFILTERS ( dim_sector ) )
 			VAR total_3 = CALCULATE ( [Average payment SAR], REMOVEFILTERS ( dim_sector ) )
 			VAR total_4 = CALCULATE ( [Average payment change %], REMOVEFILTERS ( dim_sector ) )
-			VAR header_row = "<div style='font-size:14.67px;line-height:20px;font-weight:600;color:#13161B'>Every sector</div><div style='font-size:12px;line-height:16px;color:#4F5966;margin:2px 0 14px'>Largest first. Changes on the same weeks a year before: <span style='color:#15803D'>&#9650;</span> up, <span style='color:#C81E1E'>&#9660;</span> down.</div><div style='display:flex;align-items:flex-end;height:24px;padding-bottom:4px;border-bottom:1px solid #13161B;font-size:12px;font-weight:600;color:#13161B;line-height:16px'><div style='width:150px;text-align:left;white-space:nowrap'>Sector</div><div style='width:104px;text-align:center;white-space:nowrap'>Spent (bn SAR)</div><div style='width:116px;text-align:center;white-space:nowrap'>Spending growth</div><div style='width:116px;text-align:center;white-space:nowrap'>Payments growth</div><div style='width:124px;text-align:center;white-space:nowrap'>Avg. payment (SAR)</div><div style='width:100px;text-align:center;white-space:nowrap'>Change</div></div>"
+			-- one scale for every row, the total included, with 0 always on it
+			VAR change_low = MIN ( MIN ( MINX ( every_sector, [@change] ), total_4 ), 0 )
+			VAR change_high = MAX ( MAX ( MAXX ( every_sector, [@change] ), total_4 ), 0 )
 			VAR sector_line =
-			    "<div style='display:flex;align-items:center;height:24px;border-bottom:1px solid #EDF0F3;font-size:13px;font-weight:400;color:#13161B'>"
-			            & "<div style='width:150px;text-align:left'>" & SELECTEDVALUE ( dim_sector[sector] ) & "</div>"
-			            & "<div style='width:104px;text-align:center'>" & FORMAT ( sector_spent, "#,0.00" ) & "</div>"
-			            & "<div style='width:116px;text-align:center'>" & SWITCH (
+			    "<div style='display:flex;align-items:center;height:23px;border-bottom:1px solid #EDF0F3;font-size:13px;font-weight:400;color:#13161B'>"
+			            & "<div style='width:190px;text-align:left;flex:none'>" & SELECTEDVALUE ( dim_sector[sector] ) & "</div>"
+			            & "<div style='width:104px;text-align:center;flex:none'>" & FORMAT ( sector_spent, "#,0.00" ) & "</div>"
+			            & "<div style='width:116px;text-align:center;flex:none'>" & SWITCH (
 			        TRUE (),
 			        ISBLANK ( sector_growth ), "",
-			        ROUND ( sector_growth, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:50px;text-align:right'>" & "+" & FORMAT ( sector_growth, "0.0%" ) & "</span></span>",
-			        ROUND ( sector_growth, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:50px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( sector_growth ), "0.0%" ) & "</span></span>",
-			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:50px;text-align:right'>" & "0.0%" & "</span></span>"
+			        ROUND ( sector_growth, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:54px;text-align:right'>" & "+" & FORMAT ( sector_growth, "0.0%" ) & "</span></span>",
+			        ROUND ( sector_growth, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:54px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( sector_growth ), "0.0%" ) & "</span></span>",
+			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:54px;text-align:right'>" & "0.0%" & "</span></span>"
 			    ) & "</div>"
-			            & "<div style='width:116px;text-align:center'>" & SWITCH (
+			            & "<div style='width:116px;text-align:center;flex:none'>" & SWITCH (
 			        TRUE (),
 			        ISBLANK ( sector_payments ), "",
-			        ROUND ( sector_payments, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:50px;text-align:right'>" & "+" & FORMAT ( sector_payments, "0.0%" ) & "</span></span>",
-			        ROUND ( sector_payments, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:50px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( sector_payments ), "0.0%" ) & "</span></span>",
-			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:50px;text-align:right'>" & "0.0%" & "</span></span>"
+			        ROUND ( sector_payments, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:54px;text-align:right'>" & "+" & FORMAT ( sector_payments, "0.0%" ) & "</span></span>",
+			        ROUND ( sector_payments, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:54px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( sector_payments ), "0.0%" ) & "</span></span>",
+			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:54px;text-align:right'>" & "0.0%" & "</span></span>"
 			    ) & "</div>"
-			            & "<div style='width:124px;text-align:center'>" & FORMAT ( sector_average, "#,0.0" ) & "</div>"
-			            & "<div style='width:100px;text-align:center'>" & SWITCH (
-			        TRUE (),
-			        ISBLANK ( sector_change ), "",
-			        ROUND ( sector_change, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:50px;text-align:right'>" & "+" & FORMAT ( sector_change, "0.0%" ) & "</span></span>",
-			        ROUND ( sector_change, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:50px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( sector_change ), "0.0%" ) & "</span></span>",
-			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:50px;text-align:right'>" & "0.0%" & "</span></span>"
-			    ) & "</div>"
+			            & "<div style='width:124px;text-align:center;flex:none'>" & FORMAT ( sector_average, "#,0.0" ) & "</div>"
+			            & "<div style='width:24px;text-align:center;flex:none'>" & "" & "</div>"
+			            & "<div style='width:420px;text-align:center;flex:none'>" & "<div style='display:flex;width:420px;height:23px'><div style='display:flex;justify-content:flex-end;align-items:center;width:" & FORMAT ( ( 56 + DIVIDE ( 0 - change_low, change_high - change_low ) * 308 ), "0.0" ) & "px'>" & IF ( ROUND ( sector_change, 3 ) < 0, "<span style='font-size:12px;font-weight:600;color:#C81E1E;margin:0 5px'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( sector_change ), "0.0%" ) & "</span>" & "<div style='flex:none;height:12px;width:" & FORMAT ( DIVIDE ( ABS ( sector_change ), change_high - change_low ) * 308, "0.0" ) & "px;background:#C81E1E'></div>" ) & "</div><div style='display:flex;align-items:center;flex:1;border-left:1px solid #AEB7C2'>" & IF ( ROUND ( sector_change, 3 ) > 0, "<div style='flex:none;height:12px;width:" & FORMAT ( DIVIDE ( ABS ( sector_change ), change_high - change_low ) * 308, "0.0" ) & "px;background:#16A34A'></div>" & "<span style='font-size:12px;font-weight:600;color:#15803D;margin:0 5px'>" & "+" & FORMAT ( sector_change, "0.0%" ) & "</span>", IF ( NOT ISBLANK ( sector_change ) && ROUND ( sector_change, 3 ) >= 0, "<span style='font-size:12px;font-weight:600;color:#4F5966;margin:0 5px'>" & "0.0%" & "</span>" ) ) & "</div></div>" & "</div>"
 			            & "</div>"
 			VAR total_line =
-			    "<div style='display:flex;align-items:center;height:24px;border-top:1px solid #13161B;margin-top:-1px;font-size:13px;font-weight:600;color:#13161B'>"
-			            & "<div style='width:150px;text-align:left'>" & "All sectors" & "</div>"
-			            & "<div style='width:104px;text-align:center'>" & FORMAT ( total_0, "#,0.00" ) & "</div>"
-			            & "<div style='width:116px;text-align:center'>" & SWITCH (
+			    "<div style='display:flex;align-items:center;height:23px;border-top:1px solid #13161B;margin-top:-1px;font-size:13px;font-weight:600;color:#13161B'>"
+			            & "<div style='width:190px;text-align:left;flex:none'>" & "All sectors" & "</div>"
+			            & "<div style='width:104px;text-align:center;flex:none'>" & FORMAT ( total_0, "#,0.00" ) & "</div>"
+			            & "<div style='width:116px;text-align:center;flex:none'>" & SWITCH (
 			        TRUE (),
 			        ISBLANK ( total_1 ), "",
-			        ROUND ( total_1, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:50px;text-align:right'>" & "+" & FORMAT ( total_1, "0.0%" ) & "</span></span>",
-			        ROUND ( total_1, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:50px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( total_1 ), "0.0%" ) & "</span></span>",
-			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:50px;text-align:right'>" & "0.0%" & "</span></span>"
+			        ROUND ( total_1, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:54px;text-align:right'>" & "+" & FORMAT ( total_1, "0.0%" ) & "</span></span>",
+			        ROUND ( total_1, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:54px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( total_1 ), "0.0%" ) & "</span></span>",
+			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:54px;text-align:right'>" & "0.0%" & "</span></span>"
 			    ) & "</div>"
-			            & "<div style='width:116px;text-align:center'>" & SWITCH (
+			            & "<div style='width:116px;text-align:center;flex:none'>" & SWITCH (
 			        TRUE (),
 			        ISBLANK ( total_2 ), "",
-			        ROUND ( total_2, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:50px;text-align:right'>" & "+" & FORMAT ( total_2, "0.0%" ) & "</span></span>",
-			        ROUND ( total_2, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:50px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( total_2 ), "0.0%" ) & "</span></span>",
-			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:50px;text-align:right'>" & "0.0%" & "</span></span>"
+			        ROUND ( total_2, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:54px;text-align:right'>" & "+" & FORMAT ( total_2, "0.0%" ) & "</span></span>",
+			        ROUND ( total_2, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:54px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( total_2 ), "0.0%" ) & "</span></span>",
+			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:54px;text-align:right'>" & "0.0%" & "</span></span>"
 			    ) & "</div>"
-			            & "<div style='width:124px;text-align:center'>" & FORMAT ( total_3, "#,0.0" ) & "</div>"
-			            & "<div style='width:100px;text-align:center'>" & SWITCH (
-			        TRUE (),
-			        ISBLANK ( total_4 ), "",
-			        ROUND ( total_4, 3 ) > 0, "<span style='display:inline-flex;color:#15803D'><span style='width:14px;text-align:center'>" & UNICHAR ( 9650 ) & "</span><span style='width:50px;text-align:right'>" & "+" & FORMAT ( total_4, "0.0%" ) & "</span></span>",
-			        ROUND ( total_4, 3 ) < 0, "<span style='display:inline-flex;color:#C81E1E'><span style='width:14px;text-align:center'>" & UNICHAR ( 9660 ) & "</span><span style='width:50px;text-align:right'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( total_4 ), "0.0%" ) & "</span></span>",
-			        "<span style='display:inline-flex;color:#4F5966'><span style='width:14px;text-align:center'>" & "" & "</span><span style='width:50px;text-align:right'>" & "0.0%" & "</span></span>"
-			    ) & "</div>"
+			            & "<div style='width:124px;text-align:center;flex:none'>" & FORMAT ( total_3, "#,0.0" ) & "</div>"
+			            & "<div style='width:24px;text-align:center;flex:none'>" & "" & "</div>"
+			            & "<div style='width:420px;text-align:center;flex:none'>" & "<div style='display:flex;width:420px;height:23px'><div style='display:flex;justify-content:flex-end;align-items:center;width:" & FORMAT ( ( 56 + DIVIDE ( 0 - change_low, change_high - change_low ) * 308 ), "0.0" ) & "px'>" & IF ( ROUND ( total_4, 3 ) < 0, "<span style='font-size:12px;font-weight:700;color:#C81E1E;margin:0 5px'>" & UNICHAR ( 8722 ) & FORMAT ( ABS ( total_4 ), "0.0%" ) & "</span>" & "<div style='flex:none;height:12px;width:" & FORMAT ( DIVIDE ( ABS ( total_4 ), change_high - change_low ) * 308, "0.0" ) & "px;background:#C81E1E'></div>" ) & "</div><div style='display:flex;align-items:center;flex:1;border-left:1px solid #AEB7C2'>" & IF ( ROUND ( total_4, 3 ) > 0, "<div style='flex:none;height:12px;width:" & FORMAT ( DIVIDE ( ABS ( total_4 ), change_high - change_low ) * 308, "0.0" ) & "px;background:#16A34A'></div>" & "<span style='font-size:12px;font-weight:700;color:#15803D;margin:0 5px'>" & "+" & FORMAT ( total_4, "0.0%" ) & "</span>", IF ( NOT ISBLANK ( total_4 ) && ROUND ( total_4, 3 ) >= 0, "<span style='font-size:12px;font-weight:700;color:#4F5966;margin:0 5px'>" & "0.0%" & "</span>" ) ) & "</div></div>" & "</div>"
 			            & "</div>"
+			VAR footer =
+			    "<div style='display:flex;justify-content:space-between;align-items:center;margin-top:12px'>"
+			        & "<div style='font-size:12px;color:#4F5966'>" & [Sectors sentence] & "</div>"
+			        & "<div style='font-size:13px;color:#13161B;background:#F2F4F7;border-radius:6px;padding:6px 12px;white-space:nowrap'>"
+			        & "Spending = number of payments &times; average payment</div></div>"
+			-- The row starts with its place in the current sort as hidden text ('<!--01-->'), and the visual sorts by this measure
+			-- (as the Cities scorecard does since review round 4): the tooltip then shows readable values, not the sort value.
 			RETURN
 			    IF (
 			        HASONEVALUE ( dim_sector[sector] ) && NOT ISBLANK ( sector_spent ),
-			        "<div style='font-family:Segoe UI,sans-serif;font-variant-numeric:tabular-nums'>"
-			            & IF ( sector_spent = largest, header_row ) & sector_line & IF ( sector_spent = smallest, total_line )
+			        "<!--" & FORMAT ( position, "00" ) & "-->"
+			            & "<div style='font-family:Segoe UI,sans-serif;font-variant-numeric:tabular-nums'>"
+			            & IF ( position = 1, "<div style='display:flex;align-items:flex-end;height:24px;padding-bottom:4px;border-bottom:1px solid #13161B;font-size:12px;font-weight:600;color:#13161B;line-height:16px'><div style='width:190px;text-align:left;white-space:nowrap;flex:none'>Sector</div><div style='width:104px;text-align:center;white-space:nowrap;flex:none'>Spent (bn SAR)</div><div style='width:116px;text-align:center;white-space:nowrap;flex:none'>Spending growth</div><div style='width:116px;text-align:center;white-space:nowrap;flex:none'>Payments growth</div><div style='width:124px;text-align:center;white-space:nowrap;flex:none'>Avg. payment (SAR)</div><div style='width:24px;text-align:center;white-space:nowrap;flex:none'></div><div style='width:420px;text-align:center;white-space:nowrap;flex:none'>Avg. payment change</div></div>" ) & sector_line
+			            & IF ( position = COUNTROWS ( every_sector ), total_line & footer )
 			            & "</div>"
 			    )
 		displayFolder: 9 HTML
 		lineageTag: 013ccb5a-71c2-5d06-ba52-823dcc2a3220
+
+	/// The line under the Sectors table's title: how the rows are sorted, and what the green and red arrows mean.
+	measure 'HTML sector subtitle' =
+			VAR every_sector = ADDCOLUMNS ( ALLSELECTED ( dim_sector[sector] ), "@change", [Average payment change %] )
+			VAR counted = COUNTROWS ( FILTER ( every_sector, NOT ISBLANK ( [@change] ) ) )
+			VAR bigger = COUNTROWS ( FILTER ( every_sector, [@change] > 0 ) ) + 0
+			VAR pick = SELECTEDVALUE ( 'Sort sector'[Sort], "Avg. payment change" )
+			VAR sorted_text =
+			    SWITCH (
+			        pick,
+			        "Spent", "Largest first.",
+			        "Spending growth", "Fastest spending growth first.",
+			        "Sorted by the change in the average payment: " & bigger & " bigger, " & ( counted - bigger ) & " smaller."
+			    )
+			RETURN
+			    IF (
+			        counted > 0,
+			        "<div style='font-family:Segoe UI,sans-serif;font-size:12px;line-height:16px;color:#4F5966;white-space:nowrap'>"
+			            & sorted_text & " Changes on the same weeks a year before: <span style='color:#15803D'>&#9650;</span> up, "
+			            & "<span style='color:#C81E1E'>&#9660;</span> down.</div>"
+			    )
+		displayFolder: 9 HTML
+		lineageTag: 843fcd68-b472-566e-950d-3e9a580a80d2
+
+	/// One row of the Cities scorecard; the first row in the current sort also holds the column headers, the last one the colour key.
+	measure 'HTML city row' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR city_growth = [Spending growth %]
+			VAR city_before = [Spending growth year before %]
+			VAR city_share = [Share of national %]
+			VAR city_average = [Average payment SAR]
+			VAR national_growth = [National growth %]
+			VAR national_before = CALCULATE ( [Spending growth year before %], REMOVEFILTERS ( dim_city ) )
+			VAR national_average = [National average payment SAR]
+			VAR every_city =
+			    ADDCOLUMNS (
+			        ALLSELECTED ( dim_city[city] ),
+			        "@growth", [Spending growth %], "@before", [Spending growth year before %],
+			        "@share", [Share of national %], "@average", [Average payment SAR], "@key", [City sort value]
+			    )
+			-- one scale for every row: 0, the country, this year and the year before (MINX and MAXX skip blank ticks)
+			VAR low_now = MIN ( MIN ( MINX ( every_city, [@growth] ), national_growth ), 0 )
+			VAR high_now = MAX ( MAXX ( every_city, [@growth] ), national_growth )
+			VAR low_before = MINX ( every_city, [@before] )
+			VAR high_before = MAXX ( every_city, [@before] )
+			VAR growth_low = IF ( ISBLANK ( low_before ), low_now, MIN ( low_now, low_before ) )
+			VAR growth_high = IF ( ISBLANK ( high_before ), high_now, MAX ( high_now, high_before ) ) * 1.02
+			VAR share_most = MAXX ( every_city, [@share] )
+			VAR average_most = MAXX ( every_city, [@average] )
+			VAR ticks = COUNTROWS ( FILTER ( every_city, NOT ISBLANK ( [@before] ) ) )
+			VAR sort_now = [City sort value]
+			VAR position = COUNTROWS ( FILTER ( every_city, [@key] > sort_now ) ) + 1
+			-- the change in points, from the rounded rates the reader sees
+			VAR change_pts = IF ( NOT ISBLANK ( city_before ), ( ROUND ( city_growth, 3 ) - ROUND ( city_before, 3 ) ) * 100 )
+			VAR faster = change_pts > 0
+			VAR slower = change_pts < 0
+			VAR national_change_pts = IF ( NOT ISBLANK ( national_before ), ( ROUND ( national_growth, 3 ) - ROUND ( national_before, 3 ) ) * 100 )
+			VAR national_faster = national_change_pts > 0
+			VAR national_slower = national_change_pts < 0
+			VAR bar_colour = IF ( faster, "#16A34A", IF ( slower, "#C81E1E", "#D0D5DD" ) )
+			VAR x_zero = ( 4 + DIVIDE ( 0 - growth_low, growth_high - growth_low ) * 296 )
+			VAR x_growth = ( 4 + DIVIDE ( city_growth - growth_low, growth_high - growth_low ) * 296 )
+			VAR x_before = ( 4 + DIVIDE ( city_before - growth_low, growth_high - growth_low ) * 296 )
+			VAR x_national = ( 4 + DIVIDE ( national_growth - growth_low, growth_high - growth_low ) * 296 )
+			VAR growth_text = IF ( city_growth >= 0, "+", UNICHAR ( 8722 ) ) & FORMAT ( ABS ( city_growth ), "0.0%" )
+			VAR before_text =
+			    IF ( ISBLANK ( city_before ), "<span style='color:#646E7B'>" & UNICHAR ( 8211 ) & "</span>",
+			        IF ( city_before >= 0, "+", UNICHAR ( 8722 ) ) & FORMAT ( ABS ( city_before ), "0.0%" ) )
+			VAR national_text = IF ( national_growth >= 0, "+", UNICHAR ( 8722 ) ) & FORMAT ( ABS ( national_growth ), "0.0%" )
+			VAR national_before_text =
+			    IF ( ISBLANK ( national_before ), "<span style='color:#646E7B'>" & UNICHAR ( 8211 ) & "</span>",
+			        IF ( national_before >= 0, "+", UNICHAR ( 8722 ) ) & FORMAT ( ABS ( national_before ), "0.0%" ) )
+			VAR chart_header = "Bar " & y & IF ( ticks > 0, ", tick " & ( y - 1 ) )
+			VAR graphic =
+			    "<svg width='304' height='36' viewBox='0 0 304 36' style='flex:none;display:block'>"
+			        & "<polyline points='" & FORMAT ( x_zero, "0.0" ) & ",0 " & FORMAT ( x_zero, "0.0" ) & ",36' fill='none' stroke='" & "#AEB7C2" & "' stroke-width='1'/>"
+			        & "<polyline points='" & FORMAT ( x_zero, "0.0" ) & ",18.0 " & FORMAT ( x_growth, "0.0" ) & ",18.0' fill='none' stroke='" & bar_colour & "' stroke-width='16'/>"
+			        & "<polyline points='" & FORMAT ( x_national, "0.0" ) & ",0 " & FORMAT ( x_national, "0.0" ) & ",36' fill='none' stroke='" & "#646E7B" & "' stroke-width='1' stroke-dasharray='3 3'/>"
+			        & IF ( NOT ISBLANK ( city_before ), "<polyline points='" & FORMAT ( x_before, "0.0" ) & ",6.0 " & FORMAT ( x_before, "0.0" ) & ",30.0' fill='none' stroke='" & "#344054" & "' stroke-width='2.5'/>" )
+			        & "</svg>"
+			VAR city_line =
+			    "<div style='display:flex;align-items:center;height:36px;border-bottom:1px solid #EDF0F3;font-size:13px;color:#13161B'>"
+			        & "<div style='width:140px;flex:none;white-space:nowrap'>" & SELECTEDVALUE ( dim_city[city] ) & "</div>"
+			        & "<div style='width:84px;flex:none;text-align:center'><span style='display:inline-block;width:52px;text-align:right'>" & growth_text & "</span></div>"
+			        & "<div style='width:124px;flex:none;text-align:center'>" & IF ( NOT ISBLANK ( change_pts ), "<span style='display:inline-flex;font-size:12px;font-weight:600;color:" & IF ( faster, "#15803D", IF ( slower, "#C81E1E", "#4F5966" ) ) & "'><span style='width:14px;text-align:center'>" & IF ( faster, UNICHAR ( 9650 ), IF ( slower, UNICHAR ( 9660 ), "" ) ) & "</span><span style='width:32px;text-align:right'>" & FORMAT ( ABS ( change_pts ), "0.0" ) & "</span></span>", "<span style='color:#646E7B'>" & UNICHAR ( 8211 ) & "</span>" ) & "</div>"
+			        & "<div style='width:16px;flex:none'></div>"
+			        & graphic
+			        & "<div style='width:40px;flex:none'></div>"
+			        & "<div style='width:190px;flex:none;box-sizing:border-box;display:flex;align-items:center;height:36px;border-left:1px solid #AEB7C2'><div style='flex:none;height:16px;width:" & FORMAT ( DIVIDE ( city_share, share_most ) * 130, "0.0" ) & "px;background:#667085'></div><span style='margin-left:6px'>" & FORMAT ( city_share, "0.0%" ) & "</span></div>"
+			        & "<div style='width:20px;flex:none'></div>"
+			        & "<div style='width:190px;flex:none;box-sizing:border-box;display:flex;align-items:center;height:36px;border-left:1px solid #AEB7C2'><div style='flex:none;height:16px;width:" & FORMAT ( DIVIDE ( city_average, average_most ) * 130, "0.0" ) & "px;background:" & IF ( city_average > national_average, "#344054", "#D0D5DD" ) & "'></div><span style='margin-left:6px'>" & FORMAT ( city_average, "#,0.0" ) & "</span></div>"
+			        & "</div>"
+			VAR footer = 
+			    "<div style='display:flex;height:18px;font-size:11px;color:#646E7B'><div style='width:364px;flex:none'></div>"
+			        & "<svg width='304' height='18' viewBox='0 0 304 18' style='flex:none;display:block'>"
+			        & "<text x='" & FORMAT ( MIN ( MAX ( x_national, 44 ), 260 ), "0.0" ) & "' y='13' font-size='11' fill='#646E7B' "
+			        & "text-anchor='middle'>National " & national_text & "</text></svg>"
+			        & "<div style='width:250px;flex:none'></div>"
+			        & "<div style='width:190px;flex:none;line-height:18px'>Dark: above the national " & FORMAT ( national_average, "0.0" ) & "</div></div>"
+			        & IF (
+			            ticks > 0,
+			            "<div style='display:flex;margin-top:6px;font-size:12px;font-weight:600'><div style='width:364px;flex:none'></div>"
+			                & "<span style='color:#15803D'>&#9650; Faster than a year before</span>"
+			                & "<span style='color:#C81E1E;margin-left:24px'>&#9660; Slower</span></div>"
+			        )
+			-- The row starts with its place in the current sort as hidden text ('<!--01-->'), and the visual sorts by this measure:
+			-- the sort no longer needs the sort value in the visual's tooltip fields, so the tooltip can show readable values.
+			RETURN
+			    IF (
+			        HASONEVALUE ( dim_city[city] ) && NOT ISBLANK ( city_growth ),
+			        "<!--" & FORMAT ( position, "00" ) & "-->"
+			            & "<div style='font-family:Segoe UI,sans-serif;font-variant-numeric:tabular-nums'>"
+			            & IF ( position = 1, "<div style='display:flex;align-items:flex-end;height:24px;padding-bottom:4px;border-bottom:1px solid #13161B;font-size:12px;font-weight:600;color:#13161B;line-height:16px'><div style='width:140px;flex:none;white-space:nowrap;text-align:left'>City</div><div style='width:84px;flex:none;white-space:nowrap;text-align:center'>Growth " & y & "</div><div style='width:124px;flex:none;white-space:nowrap;text-align:center'>Change vs " & ( y - 1 ) & " (pts)</div><div style='width:16px;flex:none;white-space:nowrap;text-align:left'></div><div style='width:304px;flex:none;white-space:nowrap;text-align:left'>" & chart_header & "</div><div style='width:40px;flex:none;white-space:nowrap;text-align:left'></div><div style='width:190px;flex:none;white-space:nowrap;text-align:left'>Share of national spending</div><div style='width:20px;flex:none;white-space:nowrap;text-align:left'></div><div style='width:190px;flex:none;white-space:nowrap;text-align:left'>Average payment (SAR)</div></div>" ) & city_line
+			            & IF ( position = COUNTROWS ( every_city ), footer )
+			            & "</div>"
+			    )
+		displayFolder: 9 HTML
+		lineageTag: c125da93-f8dd-59d9-aa63-2d2aa711d776
+
+	/// Hover text on the Cities scorecard: the city's growth a year before.
+	measure 'Tooltip city growth before' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			VAR growth_before = [Spending growth year before %]
+			RETURN
+			    IF (
+			        ISBLANK ( growth_before ),
+			        "None: " & ( y - 2 ) & " was a pandemic year",
+			        IF ( growth_before >= 0, "+", UNICHAR ( 8722 ) ) & FORMAT ( ABS ( growth_before ), "0.0%" )
+			    )
+		displayFolder: 10 Tooltips
+		lineageTag: e1a35798-36c0-5526-8b5a-d914df69a907
+
+	/// Hover text on the Cities scorecard: this year's growth against last year's, in points, from the rounded rates (as in the table).
+	measure 'Tooltip city change' =
+			VAR growth_before = [Spending growth year before %]
+			VAR change_pts = ( ROUND ( [Spending growth %], 3 ) - ROUND ( growth_before, 3 ) ) * 100
+			RETURN
+			    IF (
+			        ISBLANK ( growth_before ),
+			        "None",
+			        IF ( change_pts > 0, UNICHAR ( 9650 ) & " ", IF ( change_pts < 0, UNICHAR ( 9660 ) & " " ) )
+			            & FORMAT ( ABS ( change_pts ), "0.0" ) & " pts " & IF ( change_pts > 0, "faster", IF ( change_pts < 0, "slower", "the same" ) )
+			    )
+		displayFolder: 10 Tooltips
+		lineageTag: 04ac7816-e10f-56ec-b45f-558e0de06c86
+
+	/// The line under the Cities scorecard's title: which years the bars and ticks are, the national growth and the national average payment.
+	measure 'HTML city subtitle' =
+			VAR y = SELECTEDVALUE ( dim_date[year] )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( [National growth %] ),
+			        "<div style='font-family:Segoe UI,sans-serif;font-size:12px;line-height:16px;color:#4F5966;white-space:nowrap'>"
+			            & "Growth on the same weeks a year before."
+			            & IF ( y - 1 < 2022, " Nothing to compare " & ( y - 1 ) & " with: " & ( y - 2 ) & " was a pandemic year." )
+			            & " One row per city, so a city reads across.</div>"
+			    )
+		displayFolder: 9 HTML
+		lineageTag: 3dd1b61a-f3f7-58fd-b317-8afa356df26e
+
+	/// Spent card tooltip: the total.
+	measure 'Tooltip spent' =
+			VAR shown = [Spent bn SAR]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( shown, "#,0.00" ) )
+		displayFolder: 10 Tooltips
+		lineageTag: 201c15fe-ce6e-55c9-80db-dbeab72a3607
+
+	/// Spent card tooltip: the same weeks a year before.
+	measure 'Tooltip spent year before' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR year_before_value = [Spent year before bn]
+			VAR number_format = "#,0.00"
+			VAR weeks_note = IF (
+			        FORMAT ( [Spent same weeks bn], number_format ) <> FORMAT ( [Spent bn SAR], number_format ),
+			        " (" & COUNTROWS (
+			            INTERSECT (
+			                VALUES ( dim_date[week_of_year] ),
+			                CALCULATETABLE ( VALUES ( dim_date[week_of_year] ), REMOVEFILTERS ( dim_date ), dim_date[year] = this_year - 1 )
+			            )
+			        ) & " weeks of " & ( this_year - 1 ) & ")"
+			    )
+			RETURN
+			    IF ( ISBLANK ( year_before_value ), UNICHAR ( 8211 ), FORMAT ( year_before_value, number_format ) & weeks_note )
+		displayFolder: 10 Tooltips
+		lineageTag: 8f5fac19-22ee-55ab-9b43-4ba629799ed4
+
+	/// Spent card tooltip: the growth.
+	measure 'Tooltip spending growth' =
+			VAR shown = [Spending growth %]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( ROUND ( shown, 3 ), "+0.0%;" & UNICHAR ( 8722 ) & "0.0%;0.0%" ) )
+		displayFolder: 10 Tooltips
+		lineageTag: dc35be02-3e36-5254-aaf9-056f0d95b03d
+
+	/// Payments card tooltip: the number of payments, millions.
+	measure 'Tooltip payments' =
+			VAR shown = [Payments m]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( shown, IF ( [Payments m] < 100, "#,0.0", "#,0" ) ) )
+		displayFolder: 10 Tooltips
+		lineageTag: d5b2a8d6-36de-5e18-8a9b-172b0e11d279
+
+	/// Payments card tooltip: the same weeks a year before.
+	measure 'Tooltip payments year before' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR year_before_value = [Payments year before m]
+			VAR number_format = IF ( [Payments m] < 100, "#,0.0", "#,0" )
+			VAR weeks_note = IF (
+			        FORMAT ( [Payments same weeks m], number_format ) <> FORMAT ( [Payments m], number_format ),
+			        " (" & COUNTROWS (
+			            INTERSECT (
+			                VALUES ( dim_date[week_of_year] ),
+			                CALCULATETABLE ( VALUES ( dim_date[week_of_year] ), REMOVEFILTERS ( dim_date ), dim_date[year] = this_year - 1 )
+			            )
+			        ) & " weeks of " & ( this_year - 1 ) & ")"
+			    )
+			RETURN
+			    IF ( ISBLANK ( year_before_value ), UNICHAR ( 8211 ), FORMAT ( year_before_value, number_format ) & weeks_note )
+		displayFolder: 10 Tooltips
+		lineageTag: 40b962ff-5943-5650-88d7-b1d3ade6a500
+
+	/// Payments card tooltip: the growth.
+	measure 'Tooltip payments growth' =
+			VAR shown = [Payments growth %]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( ROUND ( shown, 3 ), "+0.0%;" & UNICHAR ( 8722 ) & "0.0%;0.0%" ) )
+		displayFolder: 10 Tooltips
+		lineageTag: af13ef69-45a8-5d78-bd9b-ed84503efd5d
+
+	/// Average payment card tooltip: the average payment, SAR.
+	measure 'Tooltip average payment' =
+			VAR shown = [Average payment SAR]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( shown, "#,0.0" ) )
+		displayFolder: 10 Tooltips
+		lineageTag: 3a2c800b-260a-5a7d-9498-2cc2d86ca277
+
+	/// Average payment card tooltip: the same weeks a year before.
+	measure 'Tooltip average payment year before' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR year_before_value = [Average payment year before SAR]
+			VAR number_format = "#,0.0"
+			VAR weeks_note = IF (
+			        FORMAT ( [Average payment same weeks SAR], number_format ) <> FORMAT ( [Average payment SAR], number_format ),
+			        " (" & COUNTROWS (
+			            INTERSECT (
+			                VALUES ( dim_date[week_of_year] ),
+			                CALCULATETABLE ( VALUES ( dim_date[week_of_year] ), REMOVEFILTERS ( dim_date ), dim_date[year] = this_year - 1 )
+			            )
+			        ) & " weeks of " & ( this_year - 1 ) & ")"
+			    )
+			RETURN
+			    IF ( ISBLANK ( year_before_value ), UNICHAR ( 8211 ), FORMAT ( year_before_value, number_format ) & weeks_note )
+		displayFolder: 10 Tooltips
+		lineageTag: e58f2c2f-0989-5128-bab7-a0cd10e50bb7
+
+	/// Average payment card tooltip: the change.
+	measure 'Tooltip average payment change' =
+			VAR shown = [Average payment change %]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( ROUND ( shown, 3 ), "+0.0%;" & UNICHAR ( 8722 ) & "0.0%;0.0%" ) )
+		displayFolder: 10 Tooltips
+		lineageTag: 753cd12a-d119-5a24-96aa-c06b4aef1eb6
+
+	/// Biggest week card tooltip: the biggest week, billion SAR.
+	measure 'Tooltip biggest week' =
+			VAR shown = [Biggest week bn]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( shown, "#,0.00" ) )
+		displayFolder: 10 Tooltips
+		lineageTag: 083ae87f-4ccd-5189-b953-ab50ed0a8a12
+
+	/// Biggest week card tooltip: which week it was, from Sunday to Saturday, and what kind of week.
+	measure 'Tooltip biggest week date' =
+			VAR biggest = [Biggest week bn]
+			VAR biggest_week = MAXX ( FILTER ( VALUES ( dim_date[week_start] ), [Spent bn SAR] = biggest ), dim_date[week_start] )
+			VAR phase = CALCULATE ( SELECTEDVALUE ( dim_date[phase] ), dim_date[week_start] = biggest_week )
+			VAR last_day = biggest_week + 6
+			VAR first_format =
+			    IF ( MONTH ( biggest_week ) = MONTH ( last_day ), "d", IF ( YEAR ( biggest_week ) = YEAR ( last_day ), "d mmm", "d mmm yyyy" ) )
+			RETURN
+			    -- with no biggest week (a city and a sector both picked) every blank week equals the blank maximum: a dash then
+			    IF (
+			        ISBLANK ( biggest ) || ISBLANK ( biggest_week ),
+			        UNICHAR ( 8211 ),
+			        FORMAT ( biggest_week, first_format ) & " to " & FORMAT ( last_day, "d mmm yyyy" ) & IF ( NOT ISBLANK ( phase ), ", " & phase )
+			    )
+		displayFolder: 10 Tooltips
+		lineageTag: 898b0c52-8260-5530-9af0-1b3cc9d1d048
+
+	/// Biggest week card tooltip: the biggest of the same weeks a year before.
+	measure 'Tooltip biggest week year before' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR year_before_value = [Biggest week year before bn]
+			VAR number_format = "#,0.00"
+			VAR weeks_note = ""
+			RETURN
+			    IF ( ISBLANK ( year_before_value ), UNICHAR ( 8211 ), FORMAT ( year_before_value, number_format ) & weeks_note )
+		displayFolder: 10 Tooltips
+		lineageTag: 01baa868-0709-5d40-b93b-5d600e008e0f
+
+	/// Biggest week card tooltip: the change.
+	measure 'Tooltip biggest week change' =
+			VAR shown = [Biggest week change %]
+			RETURN
+			    IF ( ISBLANK ( shown ), UNICHAR ( 8211 ), FORMAT ( ROUND ( shown, 3 ), "+0.0%;" & UNICHAR ( 8722 ) & "0.0%;0.0%" ) )
+		displayFolder: 10 Tooltips
+		lineageTag: 3aead32d-6e57-5064-9946-8ef5a7f15b77
+
+	/// Card tooltip: what the little line shows (the dot on the last week).
+	measure 'Tooltip weekly line' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			RETURN
+			    IF (
+			        ISBLANK ( [Spent bn SAR] ),
+			        UNICHAR ( 8211 ),
+			        "Each week of " & this_year & ", with a dot on the last one; dotted: the same weeks of " & ( this_year - 1 )
+			    )
+		displayFolder: 10 Tooltips
+		lineageTag: 5c9b856a-5ec1-5542-8ed0-5bdf59baa29a
+
+	/// Biggest week card tooltip: what the little line shows (the dot on the biggest week).
+	measure 'Tooltip weekly line biggest' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			RETURN
+			    IF (
+			        ISBLANK ( [Spent bn SAR] ),
+			        UNICHAR ( 8211 ),
+			        "Each week of " & this_year & ", with a dot on the biggest one; dotted: the same weeks of " & ( this_year - 1 )
+			    )
+		displayFolder: 10 Tooltips
+		lineageTag: 0d2f813b-ab53-56fd-8a8c-cecf0eadf1e5
+
+	/// Growth year by year tooltip: how many weeks the year is compared on, and which ('27 weeks, 5 Jan to 12 Jul 2025'; 2023's week 53 has no week 53 in 2022 to meet).
+	measure 'Tooltip weeks compared' =
+			VAR this_year = SELECTEDVALUE ( dim_date[year] )
+			VAR shared_weeks =
+			    INTERSECT (
+			        VALUES ( dim_date[week_of_year] ),
+			        CALCULATETABLE ( VALUES ( dim_date[week_of_year] ), REMOVEFILTERS ( dim_date ), dim_date[year] = this_year - 1 )
+			    )
+			VAR first_day = CALCULATE ( MIN ( dim_date[week_start] ), KEEPFILTERS ( shared_weeks ) )
+			VAR last_day = CALCULATE ( MAX ( dim_date[week_start] ), KEEPFILTERS ( shared_weeks ) ) + 6
+			RETURN
+			    IF (
+			        NOT ISBLANK ( [Spent same weeks bn] ),
+			        COUNTROWS ( shared_weeks ) & " weeks, "
+			            & FORMAT ( first_day, IF ( YEAR ( first_day ) = YEAR ( last_day ), "d mmm", "d mmm yyyy" ) )
+			            & " to " & FORMAT ( last_day, "d mmm yyyy" )
+			    )
+		displayFolder: 10 Tooltips
+		lineageTag: b59f1f77-7264-5d1f-aa68-4b9e690742ac
+
+	/// Ramadan slope chart tooltip: this point against the 8 weeks before Ramadan in the same year. The chart groups by the phase and its sort column, so both lose their filter.
+	measure 'Tooltip against weeks before' =
+			VAR phase = SELECTEDVALUE ( dim_date[ramadan_phase] )
+			VAR this_average = [Average week bn SAR]
+			VAR base =
+			    CALCULATE (
+			        [Average week bn SAR],
+			        REMOVEFILTERS ( dim_date[ramadan_phase], dim_date[ramadan_phase_order] ),
+			        dim_date[ramadan_phase] = "8 weeks before"
+			    )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( this_average ), BLANK (),
+			        phase = "8 weeks before", "None: these weeks are the base",
+			        FORMAT ( ROUND ( DIVIDE ( this_average, base ) - 1, 3 ), "+0.0%;" & UNICHAR ( 8722 ) & "0.0%;0.0%" )
+			    )
+		displayFolder: 10 Tooltips
+		lineageTag: 2c2c779f-4149-58a2-a306-29a51f28dd0a
 
 	partition Measures_ = m
 		mode: import

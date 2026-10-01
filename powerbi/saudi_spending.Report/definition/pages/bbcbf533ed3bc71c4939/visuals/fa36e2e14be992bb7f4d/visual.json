@@ -3,9 +3,9 @@
   "name": "fa36e2e14be992bb7f4d",
   "position": {
     "x": 112,
-    "y": 128,
+    "y": 144,
     "z": 3000,
-    "height": 552,
+    "height": 536,
     "width": 344,
     "tabOrder": 3000
   },
@@ -174,7 +174,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Year changes the Overview, Cities and Sectors together. City and Sector are on the Overview: pick one or more cities, or one or more sectors, not both. On the Cities and Sectors pages, right-click a city or a sector to open it on the Overview. Reset filters returns to the whole country and the latest year.",
+                    "value": "Year changes the Overview, Cities and Sectors together. City and Sector are on the Overview: pick one or more cities, or one or more sectors, not both. On the Cities and Sectors pages, Sort by changes the order of the rows, and a right-click on a city or a sector opens it on the Overview. Reset returns to the whole country and the latest year.",
                     "textStyle": {
                       "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
                       "fontSize": "10pt",

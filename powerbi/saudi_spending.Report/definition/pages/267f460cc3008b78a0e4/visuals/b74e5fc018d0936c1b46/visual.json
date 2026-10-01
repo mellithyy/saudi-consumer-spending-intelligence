@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "b74e5fc018d0936c1b46",
   "position": {
-    "x": 566,
-    "y": 64,
+    "x": 1184,
+    "y": 20,
     "z": 8000,
     "height": 32,
-    "width": 114,
+    "width": 72,
     "tabOrder": 8000
   },
   "visual": {
@@ -38,7 +38,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#4F5966'"
+                      "Value": "'#D0D5DD'"
                     }
                   }
                 }
@@ -54,7 +54,7 @@
             "iconSize": {
               "expr": {
                 "Literal": {
-                  "Value": "14D"
+                  "Value": "13D"
                 }
               }
             },
@@ -95,7 +95,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Reset filters'"
+                  "Value": "'Reset'"
                 }
               }
             },
@@ -109,7 +109,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "10D"
+                  "Value": "9D"
                 }
               }
             },
@@ -118,7 +118,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#13161B'"
+                      "Value": "'#D0D5DD'"
                     }
                   }
                 }
@@ -163,7 +163,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#FFFFFF'"
+                      "Value": "'#1D2939'"
                     }
                   }
                 }
@@ -188,7 +188,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#F4F6F8'"
+                      "Value": "'#344054'"
                     }
                   }
                 }
@@ -213,7 +213,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#E3E7EC'"
+                      "Value": "'#475467'"
                     }
                   }
                 }
@@ -251,7 +251,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#E3E7EC'"
+                      "Value": "'#475467'"
                     }
                   }
                 }
@@ -276,7 +276,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#C9D1DA'"
+                      "Value": "'#98A2B3'"
                     }
                   }
                 }
@@ -301,7 +301,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#C9D1DA'"
+                      "Value": "'#98A2B3'"
                     }
                   }
                 }
@@ -333,7 +333,7 @@
             "rectangleRoundedCurve": {
               "expr": {
                 "Literal": {
-                  "Value": "8L"
+                  "Value": "4L"
                 }
               }
             }

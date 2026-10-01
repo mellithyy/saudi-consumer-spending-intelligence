@@ -29,7 +29,7 @@
               "queryRef": "dim_date.month_days",
               "nativeQueryRef": "month_days",
               "active": true,
-              "displayName": "Weeks starting on the"
+              "displayName": "Days of the month"
             }
           ]
         },
@@ -48,7 +48,56 @@
               },
               "queryRef": "Measures_.Payday index %",
               "nativeQueryRef": "Payday index %",
-              "displayName": "Against the average normal week"
+              "displayName": "Against the average week"
+            }
+          ]
+        },
+        "Tooltips": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Payday average week bn"
+                }
+              },
+              "queryRef": "Measures_.Payday average week bn",
+              "nativeQueryRef": "Payday average week bn",
+              "displayName": "Average normal week (bn SAR)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Payday all groups bn"
+                }
+              },
+              "queryRef": "Measures_.Payday all groups bn",
+              "nativeQueryRef": "Payday all groups bn",
+              "displayName": "Average of the five groups (bn SAR)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Payday normal weeks"
+                }
+              },
+              "queryRef": "Measures_.Payday normal weeks",
+              "nativeQueryRef": "Payday normal weeks",
+              "displayName": "Normal weeks counted"
             }
           ]
         }
@@ -112,6 +161,13 @@
               "expr": {
                 "Literal": {
                   "Value": "30L"
+                }
+              }
+            },
+            "preferredCategoryWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "14D"
                 }
               }
             }
@@ -368,7 +424,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Spending by the day each week starts'"
+                  "Value": "'Spending by week of the month'"
                 }
               }
             },
@@ -505,8 +561,13 @@
             },
             "text": {
               "expr": {
-                "Literal": {
-                  "Value": "'Normal weeks of 2021 to 2025, against their average. Salaries are paid around the 27th.'"
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Subtitle payday chart"
                 }
               }
             },

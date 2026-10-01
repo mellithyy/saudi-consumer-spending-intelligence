@@ -33,22 +33,21 @@ EVALUATE SUMMARIZECOLUMNS ( dim_date[month_days], dim_date[month_days_order], "i
 -- # Weekly chart 2025: labels only on 23 Mar (20.10) and 30 Mar (10.54); subtitle '2025, billion SAR'; axis top = 1.18 x highest
 EVALUATE FILTER ( CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_date[week_start], "label", [Weekly chart label bn] ),
     dim_date[year] = 2025 ), NOT ISBLANK ( [label] ) )
--- # Weekly axis and subtitle (expect 2025 about 23.72 = 20.10 x 1.18; Khobar about 0.58)
+-- # Weekly axis and subtitle (expect 2025 about 23.72 = 20.10 x 1.18; Khobar about 0.58 = 0.49 x 1.18)
 EVALUATE ROW ( "axis 2025", CALCULATE ( [Weekly axis max], dim_date[year] = 2025 ),
     "axis Khobar", CALCULATE ( [Weekly axis max], dim_date[year] = 2025, dim_city[city] = "Khobar" ),
     "sub", CALCULATE ( [Subtitle weekly chart], dim_date[year] = 2025 ),
     "sub Khobar", CALCULATE ( [Subtitle weekly chart], dim_date[year] = 2025, dim_city[city] = "Khobar" ) )
 -- # Cities 2025 (expect Riyadh 10.9 34.5 68.2 ... Khobar 8.4 2.9 85.7; dark = average payment above the national 62.7: Khobar, Dammam, Jeddah, Riyadh, Buraidah, Makkah)
 EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_city[city], "growth", [Spending growth %], "share", [Share of national %],
-    "avg", [Average payment SAR], "colour", [Colour city payment] ), dim_date[year] = 2025 )
--- # Cities page texts 2025
-EVALUATE CALCULATETABLE ( ROW ( "title", [Title Cities], "s1", [Subtitle city growth], "s2", [Subtitle city share], "s3", [Subtitle city payment] ),
-    dim_date[year] = 2025 )
--- # Sectors 2025 (expect 17 rows as in the design, flag on Jewelry and Public utilities)
+    "avg", [Average payment SAR], "dark", [Average payment SAR] > [National average payment SAR] ), dim_date[year] = 2025 )
+-- # Cities page texts 2025 (expect "In 2025, 7 of 11 cities grew faster than the national 6.4%", "Bars 2025, ticks 2024")
+EVALUATE CALCULATETABLE ( ROW ( "title", [Title Cities], "s1", [Subtitle city growth] ), dim_date[year] = 2025 )
+-- # Sectors 2025 (expect 17 rows as in the design; sort key = the change in the average payment, Jewelry highest +18.9%, Telecom lowest -39.7%)
 EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_sector[sector], "spent", [Spent bn SAR], "growth", [Spending growth %],
-    "payments", [Payments growth %], "avg", [Average payment SAR], "change", [Average payment change %], "flag", [Rise or fall flag] ),
+    "payments", [Payments growth %], "avg", [Average payment SAR], "change", [Average payment change %], "sort key", [Sector sort value] ),
     dim_date[year] = 2025 )
--- # Sectors page texts 2025
+-- # Sectors page texts 2025 (expect "smaller in 12 of 17 sectors" and "Payments rose in 14 of 17 sectors while the average payment fell in 12: more card payments, each one smaller.")
 EVALUATE CALCULATETABLE ( ROW ( "title", [Title Sectors], "sentence", [Sectors sentence] ), dim_date[year] = 2025 )
 -- # Ramadan national lift (expect +33.4%)
 EVALUATE ROW ( "national", [Ramadan last week lift %] )
@@ -73,9 +72,9 @@ EVALUATE CALCULATETABLE (
     ROW ( "spent", [Spent bn SAR], "growth", [Spending growth %], "avg", [Average payment SAR], "title", [Title Overview],
           "sub", [Subtitle weekly chart] ),
     dim_date[year] = 2025, TREATAS ( { "Clothing & footwear", "Jewelry" }, dim_sector[sector] ) )
--- # Sector sentence and colours after the changes
-EVALUATE CALCULATETABLE ( ROW ( "sentence", [Sectors sentence], "khobar colour", CALCULATE ( [Colour city payment], dim_city[city] = "Khobar" ) ),
-    dim_date[year] = 2025 )
+-- # Sector sentence every year (expect the closing words ": more card payments, each one smaller." only where both counts are above half)
+EVALUATE ADDCOLUMNS ( FILTER ( VALUES ( dim_date[year] ), dim_date[year] >= 2022 ),
+    "sentence", CALCULATE ( [Sectors sentence] ) )
 -- # Names: 3 cities (expect 'Dammam, Khobar and Riyadh' in title and subtitle)
 EVALUATE CALCULATETABLE ( ROW ( "title", [Title Overview], "sub", [Subtitle weekly chart] ),
     dim_date[year] = 2025, TREATAS ( { "Khobar", "Dammam", "Riyadh" }, dim_city[city] ) )
@@ -110,5 +109,94 @@ EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_city[city], "growth", [Spending
 -- # Cities bullet 2022 (expect growth, no tick: 2021's growth compares with the pandemic months of 2020) and its subtitle
 EVALUATE CALCULATETABLE ( ADDCOLUMNS ( SUMMARIZECOLUMNS ( dim_city[city], "growth", [Spending growth %], "growth before", [Spending growth year before %] ),
     "subtitle", [Subtitle city growth] ), dim_date[year] = 2022 )
--- # HTML sector rows 2025 (expect 17 rows; Other sectors first with the header; public utilities last with the All sectors total)
-EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_sector[sector], "spent", [Spent bn SAR], "html", [HTML sector row] ), dim_date[year] = 2025 )
+-- # HTML sector rows 2025, default sort (expect 17 rows, each starting with its place in the sort, '<!--01-->' to '<!--17-->'; Jewelry first with the column headers, no title; Telecom last with the All sectors total and the footer)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_sector[sector], "sort key", [Sector sort value], "html", [HTML sector row] ), dim_date[year] = 2025 )
+-- # HTML sector rows 2025 sorted by spent (expect Other sectors first with the column headers; Public utilities last with the total)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_sector[sector], "sort key", [Sector sort value], "html", [HTML sector row] ),
+    dim_date[year] = 2025, TREATAS ( { "Spent" }, 'Sort sector'[Sort] ) )
+-- # HTML city rows 2025, default sort (expect 11 rows, each starting with its place '<!--01-->' to '<!--11-->'; Riyadh first with the headers 'Growth 2025', 'Change vs 2024 (pts)', 'Bar 2025, tick 2024'; Riyadh +10.9% and down 1.5 (10.9 against 12.4, the rounded rates), Khobar up 2.6, Abha down 1.8; Other cities last with 'National +6.4%', 'Dark: above the national 62.7' and the colour key)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_city[city], "sort key", [City sort value], "html", [HTML city row] ), dim_date[year] = 2025 )
+-- # City sort buttons 2025 (expect growth: Riyadh 0.109 highest; share: Riyadh 0.345 highest; average payment: Khobar 85.7 highest)
+EVALUATE ADDCOLUMNS ( VALUES ( 'Sort city'[Sort] ),
+    "top city", CALCULATE ( CONCATENATEX ( TOPN ( 1, VALUES ( dim_city[city] ), [City sort value], DESC ), dim_city[city] ), dim_date[year] = 2025 ),
+    "top value", CALCULATE ( MAXX ( VALUES ( dim_city[city] ), [City sort value] ), dim_date[year] = 2025 ) )
+-- # HTML city rows 2022 (expect grey bars, no ticks and a dash under 'Change vs 2021 (pts)': 2021's growth compares with 2020; Khobar, the lowest growth, last with 'National +18.0%' and 'Dark: above the national 77.0' but no colour key)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_city[city], "html", [HTML city row] ), dim_date[year] = 2022 )
+-- # Weekly chart rows as Deneb groups them, with the week type and its sort column (expect a label only on 23 Mar 20.10 and 30 Mar 10.54; a month on 5 Jan, 2 Feb, 2 Mar, 6 Apr, 4 May, 1 Jun, 6 Jul)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_date[week_start], dim_date[week_type], dim_date[week_type_order],
+    "label", [Weekly chart label bn], "month", [Month label], "week", [Week label] ), dim_date[year] = 2025 )
+-- # Table subtitles, split from the first row in review round 1 (expect sectors: "Sorted by the change in the average payment: 5 bigger, 12 smaller." / "Largest first." / "Fastest spending growth first.", each with the green and red arrows; cities 2025 "Growth on the same weeks a year before. One row per city, so a city reads across."; cities 2022 adds "Nothing to compare 2021 with: 2020 was a pandemic year.")
+EVALUATE ROW ( "sectors default", CALCULATE ( [HTML sector subtitle], dim_date[year] = 2025 ),
+    "sectors spent", CALCULATE ( [HTML sector subtitle], dim_date[year] = 2025, TREATAS ( { "Spent" }, 'Sort sector'[Sort] ) ),
+    "sectors growth", CALCULATE ( [HTML sector subtitle], dim_date[year] = 2025, TREATAS ( { "Spending growth" }, 'Sort sector'[Sort] ) ),
+    "cities 2025", CALCULATE ( [HTML city subtitle], dim_date[year] = 2025 ),
+    "cities 2022", CALCULATE ( [HTML city subtitle], dim_date[year] = 2022 ) )
+-- # Table subtitles for every year (expect sectors 2022 "1 bigger, 16 smaller" (only Hotels, +12.7%), 2023 "2 bigger, 15 smaller" (Hotels, Education), 2024 two counts that add to 17, 2025 "5 bigger, 12 smaller"; cities: that year's bars and ticks)
+EVALUATE ADDCOLUMNS ( FILTER ( VALUES ( dim_date[year] ), dim_date[year] >= 2022 ),
+    "sectors", [HTML sector subtitle], "cities", [HTML city subtitle] )
+-- # Lower charts' subtitles (expect the normal texts; with a city and a sector picked both say "Pick cities or sectors, not both")
+EVALUATE ROW ( "growth", [Subtitle growth chart], "payday", [Subtitle payday chart],
+    "growth both", CALCULATE ( [Subtitle growth chart], dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ),
+    "payday both", CALCULATE ( [Subtitle payday chart], dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ) )
+-- # Cities tooltip (expect 2025 Riyadh "+12.4%" and "▼ 1.5 pts slower", Khobar "▲ 2.6 pts faster"; 2022 Riyadh "None: 2020 was a pandemic year" and "None")
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_city[city], dim_date[year], "before", [Tooltip city growth before], "change", [Tooltip city change] ),
+    dim_date[year] IN { 2022, 2025 }, dim_city[city] IN { "Riyadh", "Khobar" } )
+-- # Card tooltips (expect 2025: 361.97, 340.30, +6.4%, 5,769, 5,155, +11.9%, 62.7, 66.0, −5.0%, 20.10, '23 to 29 Mar 2025, the last full week of Ramadan', 16.54, +21.5% and the two line texts; 2023: 623.85, '557.31 (52 weeks of 2022)', +9.5%, '7,238 (52 weeks of 2022)', 77.0, −11.2%, '26 Nov to 2 Dec 2023', −6.9%; Hotels 2025 payments with one decimal, 18.9 and 18.5, as on its card; a city and a sector picked: '–' on every line, never '(Blank)')
+EVALUATE UNION (
+    ROW ( "case", "2025", "spent", CALCULATE ( [Tooltip spent], dim_date[year] = 2025 ), "spent before", CALCULATE ( [Tooltip spent year before], dim_date[year] = 2025 ), "growth", CALCULATE ( [Tooltip spending growth], dim_date[year] = 2025 ),
+        "payments", CALCULATE ( [Tooltip payments], dim_date[year] = 2025 ), "payments before", CALCULATE ( [Tooltip payments year before], dim_date[year] = 2025 ), "payments growth", CALCULATE ( [Tooltip payments growth], dim_date[year] = 2025 ),
+        "average", CALCULATE ( [Tooltip average payment], dim_date[year] = 2025 ), "average before", CALCULATE ( [Tooltip average payment year before], dim_date[year] = 2025 ), "average change", CALCULATE ( [Tooltip average payment change], dim_date[year] = 2025 ),
+        "biggest", CALCULATE ( [Tooltip biggest week], dim_date[year] = 2025 ), "biggest date", CALCULATE ( [Tooltip biggest week date], dim_date[year] = 2025 ), "biggest before", CALCULATE ( [Tooltip biggest week year before], dim_date[year] = 2025 ), "biggest change", CALCULATE ( [Tooltip biggest week change], dim_date[year] = 2025 ),
+        "line", CALCULATE ( [Tooltip weekly line], dim_date[year] = 2025 ), "line biggest", CALCULATE ( [Tooltip weekly line biggest], dim_date[year] = 2025 ) ),
+    ROW ( "case", "2023", "spent", CALCULATE ( [Tooltip spent], dim_date[year] = 2023 ), "spent before", CALCULATE ( [Tooltip spent year before], dim_date[year] = 2023 ), "growth", CALCULATE ( [Tooltip spending growth], dim_date[year] = 2023 ),
+        "payments", CALCULATE ( [Tooltip payments], dim_date[year] = 2023 ), "payments before", CALCULATE ( [Tooltip payments year before], dim_date[year] = 2023 ), "payments growth", CALCULATE ( [Tooltip payments growth], dim_date[year] = 2023 ),
+        "average", CALCULATE ( [Tooltip average payment], dim_date[year] = 2023 ), "average before", CALCULATE ( [Tooltip average payment year before], dim_date[year] = 2023 ), "average change", CALCULATE ( [Tooltip average payment change], dim_date[year] = 2023 ),
+        "biggest", CALCULATE ( [Tooltip biggest week], dim_date[year] = 2023 ), "biggest date", CALCULATE ( [Tooltip biggest week date], dim_date[year] = 2023 ), "biggest before", CALCULATE ( [Tooltip biggest week year before], dim_date[year] = 2023 ), "biggest change", CALCULATE ( [Tooltip biggest week change], dim_date[year] = 2023 ),
+        "line", CALCULATE ( [Tooltip weekly line], dim_date[year] = 2023 ), "line biggest", CALCULATE ( [Tooltip weekly line biggest], dim_date[year] = 2023 ) ),
+    ROW ( "case", "2025 Hotels", "spent", CALCULATE ( [Tooltip spent], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "spent before", CALCULATE ( [Tooltip spent year before], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "growth", CALCULATE ( [Tooltip spending growth], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ),
+        "payments", CALCULATE ( [Tooltip payments], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "payments before", CALCULATE ( [Tooltip payments year before], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "payments growth", CALCULATE ( [Tooltip payments growth], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ),
+        "average", CALCULATE ( [Tooltip average payment], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "average before", CALCULATE ( [Tooltip average payment year before], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "average change", CALCULATE ( [Tooltip average payment change], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ),
+        "biggest", CALCULATE ( [Tooltip biggest week], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "biggest date", CALCULATE ( [Tooltip biggest week date], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "biggest before", CALCULATE ( [Tooltip biggest week year before], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "biggest change", CALCULATE ( [Tooltip biggest week change], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ),
+        "line", CALCULATE ( [Tooltip weekly line], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "line biggest", CALCULATE ( [Tooltip weekly line biggest], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ) ),
+    ROW ( "case", "both", "spent", CALCULATE ( [Tooltip spent], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "spent before", CALCULATE ( [Tooltip spent year before], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "growth", CALCULATE ( [Tooltip spending growth], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ),
+        "payments", CALCULATE ( [Tooltip payments], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "payments before", CALCULATE ( [Tooltip payments year before], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "payments growth", CALCULATE ( [Tooltip payments growth], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ),
+        "average", CALCULATE ( [Tooltip average payment], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "average before", CALCULATE ( [Tooltip average payment year before], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "average change", CALCULATE ( [Tooltip average payment change], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ),
+        "biggest", CALCULATE ( [Tooltip biggest week], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "biggest date", CALCULATE ( [Tooltip biggest week date], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "biggest before", CALCULATE ( [Tooltip biggest week year before], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "biggest change", CALCULATE ( [Tooltip biggest week change], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ),
+        "line", CALCULATE ( [Tooltip weekly line], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ), "line biggest", CALCULATE ( [Tooltip weekly line biggest], dim_date[year] = 2025, dim_city[city] = "Khobar", dim_sector[sector] = "Jewelry" ) )
+)
+-- # Card HTML for the same cases (expect the same numbers as the tooltips above: 2023 'vs 557.31, 52 weeks of 2022', 'vs 7,238, 52 weeks of 2022', 'vs 77.0 in 2022'; Hotels 2025 8.05, 18.9 'vs 18.5 in 2024', 426.7)
+EVALUATE UNION (
+    ROW ( "case", "2023", "spent", CALCULATE ( [HTML KPI spent], dim_date[year] = 2023 ), "payments", CALCULATE ( [HTML KPI payments], dim_date[year] = 2023 ), "average", CALCULATE ( [HTML KPI average payment], dim_date[year] = 2023 ) ),
+    ROW ( "case", "2025 Hotels", "spent", CALCULATE ( [HTML KPI spent], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "payments", CALCULATE ( [HTML KPI payments], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ), "average", CALCULATE ( [HTML KPI average payment], dim_date[year] = 2025, dim_sector[sector] = "Hotels" ) )
+)
+-- # Week label, the weekly chart's tooltip (expect '23 to 29 Mar 2025', '30 Mar to 5 Apr 2025', '29 Dec 2024 to 4 Jan 2025', '31 Dec 2023 to 6 Jan 2024')
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_date[week_start], "week", [Week label] ),
+    dim_date[week_start] IN { DATE ( 2025, 3, 23 ), DATE ( 2025, 3, 30 ), DATE ( 2024, 12, 29 ), DATE ( 2023, 12, 31 ) } )
+-- # Weeks compared, the growth chart's tooltip (expect '52 weeks, 2 Jan to 31 Dec 2022', '52 weeks, 1 Jan to 30 Dec 2023' (week 53 has no match in 2022), '52 weeks, 7 Jan 2024 to 4 Jan 2025', '27 weeks, 5 Jan to 12 Jul 2025'; growth 0.1797, 0.0954, 0.0884, 0.0637)
+EVALUATE ADDCOLUMNS ( FILTER ( VALUES ( dim_date[year] ), dim_date[year] >= 2022 ), "weeks", [Tooltip weeks compared],
+    "spent now", [Spent same weeks bn], "spent before", [Spent year before bn], "growth", [Spending growth %] )
+-- # Payday tooltip (expect 'index again' = 'index' in every row; all groups 11.318; 21st to 27th 12.260 over 46 weeks, +8.3%; 28th to 31st 25 weeks)
+EVALUATE ADDCOLUMNS ( SUMMARIZECOLUMNS ( dim_date[month_days], dim_date[month_days_order] ),
+    "index", [Payday index %], "average week", [Payday average week bn], "all groups", [Payday all groups bn],
+    "weeks", [Payday normal weeks], "index again", DIVIDE ( [Payday average week bn], [Payday all groups bn] ) - 1 )
+-- # Sectors tooltip 2025 (expect Jewelry <!--01--> 1,304.9 against 1,097.3, +18.9%; Telecom <!--17--> 59.8 against 99.0; the prefixes 01 to 17 follow the sort value)
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_sector[sector], "spent", [Spent bn SAR], "share", [Share of spending %],
+    "average", [Average payment SAR], "average before", [Average payment year before SAR], "change", [Average payment change %],
+    "prefix", LEFT ( [HTML sector row], 9 ), "sort", [Sector sort value] ), dim_date[year] = 2025 )
+-- # Sectors' shares add up (expect 1.0000, within the rounding of the source)
+EVALUATE ROW ( "share total 2025", CALCULATE ( SUMX ( VALUES ( dim_sector[sector] ), [Share of spending %] ), dim_date[year] = 2025 ) )
+-- # Ramadan yearly lifts (expect national 0.214, 0.552, 0.115, 0.285, 0.502, average 0.334; Clothing & footwear average 2.081; Makkah average 0.983)
+EVALUATE UNION (
+    ROW ( "who", "National", "2021", [Ramadan 2021 lift %], "2022", [Ramadan 2022 lift %], "2023", [Ramadan 2023 lift %], "2024", [Ramadan 2024 lift %], "2025", [Ramadan 2025 lift %], "average", [Ramadan last week lift %] ),
+    ROW ( "who", "Clothing", "2021", CALCULATE ( [Ramadan 2021 lift %], dim_sector[sector] = "Clothing & footwear" ), "2022", CALCULATE ( [Ramadan 2022 lift %], dim_sector[sector] = "Clothing & footwear" ), "2023", CALCULATE ( [Ramadan 2023 lift %], dim_sector[sector] = "Clothing & footwear" ), "2024", CALCULATE ( [Ramadan 2024 lift %], dim_sector[sector] = "Clothing & footwear" ), "2025", CALCULATE ( [Ramadan 2025 lift %], dim_sector[sector] = "Clothing & footwear" ), "average", CALCULATE ( [Ramadan last week lift %], dim_sector[sector] = "Clothing & footwear" ) ),
+    ROW ( "who", "Makkah", "2021", CALCULATE ( [Ramadan 2021 lift %], dim_city[city] = "Makkah" ), "2022", CALCULATE ( [Ramadan 2022 lift %], dim_city[city] = "Makkah" ), "2023", CALCULATE ( [Ramadan 2023 lift %], dim_city[city] = "Makkah" ), "2024", CALCULATE ( [Ramadan 2024 lift %], dim_city[city] = "Makkah" ), "2025", CALCULATE ( [Ramadan 2025 lift %], dim_city[city] = "Makkah" ), "average", CALCULATE ( [Ramadan last week lift %], dim_city[city] = "Makkah" ) )
+)
+-- # Ramadan lifts, every sector and city: the five years average to the bar (expect 0 rows)
+EVALUATE FILTER ( UNION (
+    ADDCOLUMNS ( VALUES ( dim_sector[sector] ), "avg", [Ramadan last week lift %], "five", ( [Ramadan 2021 lift %] + [Ramadan 2022 lift %] + [Ramadan 2023 lift %] + [Ramadan 2024 lift %] + [Ramadan 2025 lift %] ) / 5 ),
+    ADDCOLUMNS ( VALUES ( dim_city[city] ), "avg", [Ramadan last week lift %], "five", ( [Ramadan 2021 lift %] + [Ramadan 2022 lift %] + [Ramadan 2023 lift %] + [Ramadan 2024 lift %] + [Ramadan 2025 lift %] ) / 5 ) ),
+    ABS ( [avg] - [five] ) > 0.0000001 )
+-- # Slope chart tooltip, grouped by the phase and its sort column (expect 2025 last full week +50.2%, Eid week −21.2%; 2021 Eid week −3.7%; every '8 weeks before' point 'None: these weeks are the base')
+EVALUATE CALCULATETABLE ( SUMMARIZECOLUMNS ( dim_date[ramadan_year], dim_date[ramadan_phase], dim_date[ramadan_phase_order],
+    "average week", [Average week bn SAR], "against", [Tooltip against weeks before] ),
+    dim_date[ramadan_phase] IN { "8 weeks before", "Last full week", "Eid week" } )

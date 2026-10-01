@@ -20,6 +20,8 @@ ref table fact_national
 ref table fact_city
 ref table fact_sector
 ref table Measures_
+ref table 'Sort sector'
+ref table 'Sort city'
 
 ref cultureInfo en-US
 

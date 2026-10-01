@@ -3,9 +3,9 @@
   "name": "22f33b4d9f81a1c3a36e",
   "position": {
     "x": 406,
-    "y": 120,
+    "y": 136,
     "z": 12000,
-    "height": 90,
+    "height": 88,
     "width": 246,
     "tabOrder": 12000
   },
@@ -28,6 +28,70 @@
               },
               "queryRef": "Measures_.HTML KPI payments",
               "nativeQueryRef": "HTML KPI payments"
+            }
+          ]
+        },
+        "tooltips": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip payments"
+                }
+              },
+              "queryRef": "Measures_.Tooltip payments",
+              "nativeQueryRef": "Tooltip payments",
+              "displayName": "Payments (millions)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip payments year before"
+                }
+              },
+              "queryRef": "Measures_.Tooltip payments year before",
+              "nativeQueryRef": "Tooltip payments year before",
+              "displayName": "Same weeks a year before (millions)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip payments growth"
+                }
+              },
+              "queryRef": "Measures_.Tooltip payments growth",
+              "nativeQueryRef": "Tooltip payments growth",
+              "displayName": "Growth"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip weekly line"
+                }
+              },
+              "queryRef": "Measures_.Tooltip weekly line",
+              "nativeQueryRef": "Tooltip weekly line",
+              "displayName": "Weekly line"
             }
           ]
         }

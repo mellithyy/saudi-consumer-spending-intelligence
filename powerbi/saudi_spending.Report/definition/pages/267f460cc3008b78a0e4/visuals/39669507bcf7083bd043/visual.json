@@ -3,9 +3,9 @@
   "name": "39669507bcf7083bd043",
   "position": {
     "x": 994,
-    "y": 120,
+    "y": 136,
     "z": 16000,
-    "height": 90,
+    "height": 88,
     "width": 246,
     "tabOrder": 16000
   },
@@ -28,6 +28,85 @@
               },
               "queryRef": "Measures_.HTML KPI biggest week",
               "nativeQueryRef": "HTML KPI biggest week"
+            }
+          ]
+        },
+        "tooltips": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip biggest week"
+                }
+              },
+              "queryRef": "Measures_.Tooltip biggest week",
+              "nativeQueryRef": "Tooltip biggest week",
+              "displayName": "Biggest week (bn SAR)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip biggest week date"
+                }
+              },
+              "queryRef": "Measures_.Tooltip biggest week date",
+              "nativeQueryRef": "Tooltip biggest week date",
+              "displayName": "Week"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip biggest week year before"
+                }
+              },
+              "queryRef": "Measures_.Tooltip biggest week year before",
+              "nativeQueryRef": "Tooltip biggest week year before",
+              "displayName": "Biggest of the same weeks a year before (bn SAR)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip biggest week change"
+                }
+              },
+              "queryRef": "Measures_.Tooltip biggest week change",
+              "nativeQueryRef": "Tooltip biggest week change",
+              "displayName": "Change"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip weekly line biggest"
+                }
+              },
+              "queryRef": "Measures_.Tooltip weekly line biggest",
+              "nativeQueryRef": "Tooltip weekly line biggest",
+              "displayName": "Weekly line"
             }
           ]
         }

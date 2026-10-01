@@ -3,10 +3,10 @@
   "name": "b14006dbee4f1f690dcf",
   "position": {
     "x": 112,
-    "y": 128,
+    "y": 196,
     "z": 10000,
-    "height": 552,
-    "width": 720,
+    "height": 484,
+    "width": 1128,
     "tabOrder": 10000
   },
   "visual": {
@@ -66,6 +66,96 @@
               "queryRef": "Measures_.Spent bn SAR",
               "nativeQueryRef": "Spent bn SAR",
               "displayName": "Spent (bn SAR)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Share of spending %"
+                }
+              },
+              "queryRef": "Measures_.Share of spending %",
+              "nativeQueryRef": "Share of spending %",
+              "displayName": "Share of spending"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Spending growth %"
+                }
+              },
+              "queryRef": "Measures_.Spending growth %",
+              "nativeQueryRef": "Spending growth %",
+              "displayName": "Spending growth"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Payments growth %"
+                }
+              },
+              "queryRef": "Measures_.Payments growth %",
+              "nativeQueryRef": "Payments growth %",
+              "displayName": "Payments growth"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Average payment SAR"
+                }
+              },
+              "queryRef": "Measures_.Average payment SAR",
+              "nativeQueryRef": "Average payment SAR",
+              "displayName": "Average payment (SAR)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Average payment year before SAR"
+                }
+              },
+              "queryRef": "Measures_.Average payment year before SAR",
+              "nativeQueryRef": "Average payment year before SAR",
+              "displayName": "Average payment a year before (SAR)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Average payment change %"
+                }
+              },
+              "queryRef": "Measures_.Average payment change %",
+              "nativeQueryRef": "Average payment change %",
+              "displayName": "Average payment change"
             }
           ]
         }
@@ -80,10 +170,10 @@
                     "Entity": "Measures_"
                   }
                 },
-                "Property": "Spent bn SAR"
+                "Property": "HTML sector row"
               }
             },
-            "direction": "Descending"
+            "direction": "Ascending"
           }
         ],
         "isDefaultSort": false
@@ -222,7 +312,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "'Every sector: spending, its growth, the growth in payments, the average payment and its change, each change with an up or down arrow'"
+                  "Value": "'Every sector: spending, its growth, the growth in payments, the average payment and its change drawn as a bar, bigger to the right and smaller to the left'"
                 }
               }
             }

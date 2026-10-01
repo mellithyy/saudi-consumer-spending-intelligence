@@ -3,9 +3,9 @@
   "name": "ded79ae4ac3dd73cb39e",
   "position": {
     "x": 904,
-    "y": 128,
+    "y": 144,
     "z": 21000,
-    "height": 176,
+    "height": 200,
     "width": 336,
     "tabOrder": 21000
   },
@@ -47,7 +47,8 @@
                 }
               },
               "queryRef": "dim_date.ramadan_year",
-              "nativeQueryRef": "ramadan_year"
+              "nativeQueryRef": "ramadan_year",
+              "displayName": "Ramadan"
             }
           ]
         },
@@ -67,6 +68,25 @@
               "queryRef": "Measures_.Average week bn SAR",
               "nativeQueryRef": "Average week bn SAR",
               "displayName": "Average week (bn SAR)"
+            }
+          ]
+        },
+        "Tooltips": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures_"
+                    }
+                  },
+                  "Property": "Tooltip against weeks before"
+                }
+              },
+              "queryRef": "Measures_.Tooltip against weeks before",
+              "nativeQueryRef": "Tooltip against weeks before",
+              "displayName": "Against the 8 weeks before"
             }
           ]
         }
