@@ -28,7 +28,7 @@ The 12 months to 26 September 2026, against the same days a year before:
 | Summary | What happened: spending, payments and the average payment, week by week, month by month and by day of the week |
 | Cities | Where: the 13 regions, the 60 cities on a map, the biggest, the fastest growing and the cities that fell |
 | Activities | On what: the change in each activity, its share of spending and its average payment |
-| City × activity | Where and on what: each activity's growth in the 10 biggest cities (or in the cities picked) |
+| City × activity | Where and on what: a tree from the kingdom down to each region, city and activity, with the spending, payments and growth of every box (click a box to open it), and each activity's growth in the 10 biggest cities |
 | Ramadan & Eid | Which season: the days around Eid al-Fitr and Eid al-Adha against the year before, and the whole year day by day |
 | Month-end | When in the month: the average day by day of the month, and every payday of the year |
 | Long-term | Over the years: the market since 2016, and 16 long series since 2020 |
@@ -52,7 +52,9 @@ The 12 months to 26 September 2026, against the same days a year before:
   treemap. The Arabic pages read right to left, with Arabic digits and the Saudi riyal sign.
 - **Web copy.** The page above is the same report in one file: every page, language, theme and saved filter state
   (970 states), taken from the Power BI model and placed where the report puts each part. A layout check measured
-  every part of every state for a line, dot or word past its frame.
+  every part of every state for a line, dot or word past its frame. The spending tree on City × activity exists only
+  in this web copy, since Power BI's HTML visual cannot be clicked. It is drawn from the model's own rows, and the
+  build stops unless its totals match the report.
 
 Tools: Python (pandas, requests), SQL (DuckDB), Power BI (DAX, Deneb), headless Microsoft Edge for the checks.
 
