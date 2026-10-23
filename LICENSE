@@ -1,0 +1,16 @@
+Copyright (c) 2026 Mohamed Ellithy. All rights reserved.
+
+This repository holds the published web copy of the "Saudi card spending" dashboard (index.html, dashboard.html and its images).
+
+No license is granted. You may view the dashboard in a web browser at
+https://mellithyy.github.io/saudi-consumer-spending-intelligence/ and you may link to it.
+
+You may not copy, reproduce, modify, re-host, redistribute, sell or otherwise use any part of the page, its code, its design, its
+texts or its images, in whole or in part, including to train or evaluate machine-learning or AI models, without the author's prior
+written permission.
+
+Data source: the figures are computed by the author from the Saudi Central Bank (SAMA) Open Data Portal
+(https://www.sama.gov.sa/en-US/Statistics/). SAMA's data remain subject to SAMA's own terms of use; SAMA is not responsible for this
+analysis. "Sample Bank" is a fictional bank.
+
+Contact: https://www.linkedin.com/in/mohamed-el-lithy/
