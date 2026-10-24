@@ -38,7 +38,7 @@ The 12 months to 17 October 2026, against the same days a year before:
 
 | | |
 |---|---|
-| ![The Arabic start page](images/home_arabic.png) | ![Summary](images/summary.png) |
+| ![The Arabic start page](images/home_arabic.png) | ![Summary](images/summary_page.png) |
 | ![Cities](images/cities.png) | ![City × activity](images/city_activity.png) |
 | ![Key dates in Arabic](images/keydates_arabic.png) | ![About](images/about.png) |
 
