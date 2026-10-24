@@ -5,7 +5,8 @@ Card spending in Saudi Arabia by city, by activity and by day, from the Saudi Ce
 **Open the dashboard:** [mellithyy.github.io/saudi-consumer-spending-intelligence](https://mellithyy.github.io/saudi-consumer-spending-intelligence/)
 
 Nine pages in English and Arabic, with their filters. The Arabic pages read right to left, charts included. It opens in any
-browser, phones included (turn the phone sideways).
+browser, phones included (turn the phone sideways; pinch to zoom up to 2.5 times). The card's chip, the dashboard's
+character, opens the wallet on the start page and welcomes visitors on About.
 
 ![The dashboard's start page](images/home.png)
 
@@ -33,13 +34,13 @@ The 12 months to 17 October 2026, against the same days a year before:
 | Key dates | When: Ramadan and Eid, paydays and National Day, day by day against a normal day and against the year before |
 | Long-term | Over the years: the market since 2016, its regions, cities and activities, each from where its data starts |
 | Forecast | What comes next: the next 12 weeks and months with a range, the seasons ahead, and how far to trust it |
-| About | Where the numbers come from, what each one means, and the checks and limits |
+| About | The author, with links to LinkedIn, email and WhatsApp and a CV to download; then how to read the dashboard: where the numbers come from, what each one means, the checks and limits, and how the forecast is made |
 
 | | |
 |---|---|
 | ![Cities](images/cities.png) | ![Summary](images/summary.png) |
 | ![City × activity](images/city_activity.png) | ![The Arabic start page](images/home_arabic.png) |
-| ![Key dates in Arabic](images/keydates_arabic.png) | |
+| ![Key dates in Arabic](images/keydates_arabic.png) | ![About](images/about.png) |
 
 ## How it was built
 - **Data.** SAMA's Open Data Portal: daily numbers since 1 January 2024 for 60 cities in 13 regions and 19 activities
