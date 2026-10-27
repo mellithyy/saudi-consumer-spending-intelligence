@@ -22,7 +22,11 @@
   This small page exists so link previews work: LinkedIn refuses pages over 3 MB and the
   full dashboard (dashboard.html) is about 19 MB. People are sent straight on to the dashboard.
 -->
-<script>location.replace("dashboard.html" + location.search + location.hash);</script>
+<script>
+  // (the visit's source, LinkedIn or a search, kept for the dashboard's visit count: once sent on, the browser names this page as the source)
+  try { sessionStorage.setItem("p1ref", document.referrer); } catch (e) {}
+  location.replace("dashboard.html" + location.search + location.hash);
+</script>
 <style>
   body { margin: 0; min-height: 100vh; display: grid; place-items: center;
          background: #111317; color: #e4e5e8; font-family: "Segoe UI", system-ui, sans-serif; }
