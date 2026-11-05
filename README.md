@@ -1,4 +1,6 @@
-# Saudi Consumer Spending Intelligence
+# Saudi Card Spending
+
+**Portfolio page:** [mellithyy.github.io/work/sama](https://mellithyy.github.io/work/sama)
 
 Card spending in Saudi Arabia by city, by activity and by day, from the Saudi Central Bank's (SAMA) open data.
 
